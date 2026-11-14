@@ -1,18 +1,14 @@
-# seoa: SEO analyzer
+<div align="center">
 
-**English** · [Türkçe](README.tr.md)
+# SEO Analyzer
 
-Enter a website address, get a **scored, evidence-backed** SEO report, then ask an AI anything about it.
+Scored, evidence-backed SEO audits with an AI chat. Deterministic checks decide the score; the AI never does.
 
-Deterministic checks decide the score. The AI only adds commentary, advice and Q&A; it never changes the score. The report states what it measured and what it did not, with the reason.
+[Changelog](CHANGELOG.md) · [License](LICENSE) · [Notice](NOTICE) · [Architecture](docs/development.md) · [Configuration](docs/configuration.md) · [Google setup](docs/google-setup.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Türkçe](README.tr.md)
 
-- **Technical and on-page checks:** title, description, canonical, schema, robots.txt, sitemap, TLS and security headers, JavaScript render gap, AI crawler access.
-- **Site analysis:** broken and redirecting links, orphan pages, lab speed (LCP, CLS, FCP), images, indexability, duplicate content.
-- **Google data (optional):** Search Console (indexing, queries, rankings), CrUX field data, PageSpeed.
-- **Chat:** the AI answers only from this audit's data and cites its sources.
-- **History:** compares audits of the same site. Keywords and competitors are saved per site.
+</div>
 
-> Designed for a single user on `localhost`. There is no authentication; do not expose it to the internet.
+---
 
 ## Install
 
@@ -31,6 +27,8 @@ cp .env.example .env                   # optional: add keys (see docs/configurat
 ```
 
 ## Use
+
+> Designed for a single user on `localhost`. There is no authentication; do not expose it to the internet.
 
 ```bash
 python scripts/run_server.py          # http://127.0.0.1:8000
@@ -61,16 +59,6 @@ curl -s -X POST localhost:8000/v1/audits -H 'content-type: application/json' \
 curl -s localhost:8000/v1/audits/<id>/report              # audit.json
 curl -s localhost:8000/v1/spend                           # AI spending
 ```
-
-## More documentation
-
-- [Configuration](docs/configuration.md): all settings and the Google connection
-- [Google setup](docs/google-setup.md): Search Console step by step
-- [Development and architecture](docs/development.md): code layout, tests, how to extend
-- [Security and limits](docs/security-and-limits.md): what is protected, what is not
-- [Decisions](docs/adr/README.md): architecture decision records
-
-[Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md) · License: [MIT](LICENSE) (see [NOTICE](NOTICE) for attribution)
 
 ## Screenshots
 

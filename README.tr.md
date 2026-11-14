@@ -1,18 +1,14 @@
-# seoa: SEO analizi
+<div align="center">
 
-[English](README.md) · **Türkçe**
+# SEO Analyzer
 
-Bir web sitesi adresi girin, **skorlu ve kanıtlı** bir SEO raporu alın, sonra raporla ilgili istediğinizi yapay zekâya sorun.
+Skorlu ve kanıtlı SEO denetimleri ve yapay zekâ sohbeti. Skoru deterministik kontroller belirler; yapay zekâ belirlemez.
 
-Skoru deterministik kontroller belirler. Yapay zekâ yalnızca yorum, öneri ve soru-cevap ekler; skora girmez. Rapor, neyi ölçtüğünü ve neyi ölçmediğini nedeniyle birlikte yazar.
+[Değişiklik günlüğü](CHANGELOG.md) · [Lisans](LICENSE) · [Atıf](NOTICE) · [Mimari](docs/development.tr.md) · [Yapılandırma](docs/configuration.tr.md) · [Google kurulumu](docs/google-setup.tr.md) · [Katkı](CONTRIBUTING.md) · [Güvenlik](SECURITY.md) · [English](README.md)
 
-- **Teknik ve sayfa içi kontroller:** başlık, açıklama, canonical, schema, robots.txt, sitemap, TLS ve güvenlik başlıkları, JavaScript render farkı, yapay zekâ tarayıcılarının erişimi.
-- **Site analizi:** kırık ve yönlenen bağlantılar, yetim sayfalar, lab hız ölçümü (LCP, CLS, FCP), görseller, indekslenebilirlik, kopya içerik.
-- **Google verisi (isteğe bağlı):** Search Console (indeksleme, sorgular, sıralama), CrUX saha verisi, PageSpeed.
-- **Sohbet:** yapay zekâ yalnızca bu denetimin verisine dayanır ve kaynak gösterir.
-- **Geçmiş:** aynı sitenin denetimlerini karşılaştırır. Anahtar kelimeler ve rakipler site başına kaydedilir.
+</div>
 
-> Tek kullanıcılı ve yalnızca `localhost` için tasarlandı. Kimlik doğrulaması yoktur; internete açmayın.
+---
 
 ## Kurulum
 
@@ -31,6 +27,8 @@ cp .env.example .env                   # isteğe bağlı: anahtarları ekleyin (
 ```
 
 ## Kullanım
+
+> Tek kullanıcılı ve yalnızca `localhost` için tasarlandı. Kimlik doğrulaması yoktur; internete açmayın.
 
 ```bash
 python scripts/run_server.py          # http://127.0.0.1:8000
@@ -61,16 +59,6 @@ curl -s -X POST localhost:8000/v1/audits -H 'content-type: application/json' \
 curl -s localhost:8000/v1/audits/<id>/report              # audit.json
 curl -s localhost:8000/v1/spend                           # yapay zekâ harcaması
 ```
-
-## Daha fazla belge
-
-- [Yapılandırma](docs/configuration.tr.md): tüm ayarlar ve Google bağlantısı
-- [Google kurulumu](docs/google-setup.tr.md): Search Console adım adım
-- [Geliştirme ve mimari](docs/development.tr.md): kod yerleşimi, testler, nasıl genişletilir
-- [Güvenlik ve sınırlar](docs/security-and-limits.tr.md): nelerin korunduğu, nelerin korunmadığı
-- [Kararlar](docs/adr/README.md): mimari karar kayıtları (İngilizce)
-
-[Değişiklik günlüğü](CHANGELOG.md) · [Katkı](CONTRIBUTING.md) · [Güvenlik politikası](SECURITY.md) · Lisans: [MIT](LICENSE) (atıf için [NOTICE](NOTICE))
 
 ## Ekran görüntüleri
 
