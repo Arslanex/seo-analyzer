@@ -1,0 +1,279 @@
+{# Deep-analysis sections (belge 11). Every value from a page is autoescaped. #}
+{% macro nm(sec) %}
+<div class="card nm"><div class="big">— {{ t('cats.notmeasured') }}</div><p class="small">{{ sec.not_measured_text }}</p></div>
+{% endmacro %}
+
+{% macro stat(value, label) %}
+<div class="card stat"><div class="num sm">{{ value }}</div><div class="muted small">{{ label }}</div></div>
+{% endmacro %}
+
+{% macro more(shown, total) %}
+{% if total > shown %}<p class="muted small">{{ t('deep.truncated', shown=shown, total=total) }}</p>{% endif %}
+{% endmacro %}
+
+{% macro rated(row, key, text) %}
+{% set rt = row.ratings.get(key) %}
+{{ text }}{% if rt %} <span class="rt rt-{{ rt }}">{{ t('perf.rating.' ~ rt) }}</span>{% endif %}
+{% endmacro %}
+
+{% macro yesno(v) %}{% if v is none %}—{% elif v %}{{ t('idx.yes') }}{% else %}{{ t('idx.no') }}{% endif %}{% endmacro %}
+
+{% macro imgtable(rows) %}
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('sec.images') }}</caption><thead><tr><th scope="col">{{ t('img.col.image') }}</th><th scope="col">{{ t('col.page') }}</th><th scope="col">{{ t('img.col.format') }}</th><th scope="col">{{ t('perf.col.kb') }}</th><th scope="col">{{ t('img.col.natural') }}</th><th scope="col">{{ t('img.col.displayed') }}</th><th scope="col">{{ t('img.col.category') }}</th><th scope="col">{{ t('img.col.issues') }}</th></tr></thead><tbody>
+{% for r in rows %}<tr><td class="u"><code>{{ r.src }}</code></td><td class="u"><code>{{ r.page_url }}</code></td><td>{{ r.format or '—' }}</td><td>{{ r.kb|num }}</td><td>{{ r.natural or '—' }}</td><td>{{ r.displayed or '—' }}</td><td>{{ t('img.cat.' ~ r.category) }}</td><td>{% if r.issue_texts %}<ul class="plain">{% for x in r.issue_texts %}<li>{{ x }}</li>{% endfor %}</ul>{% else %}—{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endmacro %}
+
+{# ------------------------------------------------------------------ links #}
+{% if only is none or only == 'sec-links' %}
+<section id="sec-links" aria-labelledby="links-h">
+<h2 id="links-h">{{ t('sec.links') }}</h2>
+{% set L = report.links %}
+{% if L.status == 'not_measured' %}{{ nm(L) }}{% else %}
+{% set S = L.summary %}
+<div class="grid cols4">
+{{ stat(S.get('internal_total', 0), t('links.internal')) }}
+{{ stat(S.get('external_total', 0), t('links.external')) }}
+{{ stat((S.get('internal_unique', 0))|string ~ ' / ' ~ (S.get('external_unique', 0))|string, t('links.unique')) }}
+{{ stat(S.get('broken', 0), t('links.broken')) }}
+{{ stat(S.get('redirecting', 0), t('links.redirecting')) }}
+{{ stat(S.get('nofollow', 0), t('links.nofollow')) }}
+{{ stat((S.get('checked', 0))|string ~ ' / ' ~ (S.get('skipped', 0))|string, t('links.checked')) }}
+{{ stat(S.get('max_depth') if S.get('max_depth') is not none else '—', t('links.maxdepth')) }}
+</div>
+<p class="muted small">{{ t('deep.untrusted') }}</p>
+
+<h3>{{ t('links.broken.title') }}</h3>
+{% if L.broken %}
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('links.broken.title') }}</caption><thead><tr><th scope="col">{{ t('col.source') }}</th><th scope="col">{{ t('col.target') }}</th><th scope="col">{{ t('col.anchor') }}</th><th scope="col">{{ t('col.status') }}</th></tr></thead><tbody>
+{% for r in L.broken %}<tr><td class="u"><code>{{ r.source_url }}</code></td><td class="u"><code>{{ r.target_url }}</code></td><td>{{ r.anchor or '—' }}</td><td>{% if r.target_status is not none %}{{ r.target_status }}{% endif %}{% if r.error_text %} {{ r.error_text }}{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="muted">{{ t('links.broken.none') }}</p>{% endif %}
+
+<h3>{{ t('links.redirect.title') }}</h3>
+{% if L.redirecting %}
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('links.redirect.title') }}</caption><thead><tr><th scope="col">{{ t('col.source') }}</th><th scope="col">{{ t('col.target') }}</th><th scope="col">{{ t('col.status') }}</th></tr></thead><tbody>
+{% for r in L.redirecting %}<tr><td class="u"><code>{{ r.source_url }}</code></td><td class="u"><code>{{ r.target_url }}</code>{% if r.final_url %}<br><span class="muted small">→ <code>{{ r.final_url }}</code></span>{% endif %}</td><td>{% if r.target_status is not none %}{{ r.target_status }}{% endif %}{% if r.redirect_hops %} · {{ r.redirect_hops }}×{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="muted">{{ t('links.redirect.none') }}</p>{% endif %}
+
+{% if L.external_domains %}
+<h3>{{ t('links.domains.title') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('links.domains.title') }}</caption><thead><tr><th scope="col">{{ t('col.domain') }}</th><th scope="col">{{ t('col.count') }}</th></tr></thead><tbody>
+{% for d in L.external_domains %}<tr><td class="u"><code>{{ d.domain }}</code></td><td>{{ d.count }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{% if L.pages %}
+<h3>{{ t('links.pages.title') }}</h3>
+<div class="tablewrap"><table class="dense" data-sortable><caption class="sr">{{ t('links.pages.title') }}</caption><thead><tr><th scope="col" data-sort="text">{{ t('col.page') }}</th><th scope="col" data-sort="num">{{ t('col.inlinks') }}</th><th scope="col" data-sort="num">{{ t('col.out_int') }}</th><th scope="col" data-sort="num">{{ t('col.out_ext') }}</th><th scope="col" data-sort="num">{{ t('col.depth') }}</th><th scope="col" data-sort="text">{{ t('col.sitemap') }}</th></tr></thead><tbody>
+{% for p in L.pages[:50] %}<tr><td class="u"><code>{{ p.url }}</code></td><td data-v="{{ p.inlinks }}">{{ p.inlinks }}</td><td data-v="{{ p.outlinks_internal }}">{{ p.outlinks_internal }}</td><td data-v="{{ p.outlinks_external }}">{{ p.outlinks_external }}</td><td data-v="{{ p.depth if p.depth is not none else -1 }}">{{ p.depth if p.depth is not none else '—' }}</td><td>{{ yesno(p.in_sitemap) }}</td></tr>{% endfor %}
+</tbody></table></div>
+{{ more([L.pages|length, 50]|min, L.pages_total) }}
+{% endif %}
+
+{% if L.orphans %}
+<h3>{{ t('links.orphans.title') }}</h3>
+<p class="muted small">{{ t('links.orphans.note') }}</p>
+<ul class="plain">{% for u in L.orphans %}<li class="u"><code>{{ u }}</code></li>{% endfor %}</ul>
+{% endif %}
+
+{% if L.links %}
+<h3>{{ t('links.all.title') }}</h3>
+<p class="muted small">{{ t('links.all.note') }}</p>
+<div class="lf" role="group" aria-label="{{ t('links.filter') }}">
+<input type="radio" name="lf" id="lf-all" checked><label for="lf-all">{{ t('filter.all') }}</label>
+<input type="radio" name="lf" id="lf-internal"><label for="lf-internal">{{ t('filter.internal') }}</label>
+<input type="radio" name="lf" id="lf-external"><label for="lf-external">{{ t('filter.external') }}</label>
+<input type="radio" name="lf" id="lf-broken"><label for="lf-broken">{{ t('filter.broken') }}</label>
+<input type="radio" name="lf" id="lf-redirect"><label for="lf-redirect">{{ t('filter.redirect') }}</label>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('links.all.title') }}</caption><thead><tr><th scope="col">{{ t('col.source') }}</th><th scope="col">{{ t('col.target') }}</th><th scope="col">{{ t('col.anchor') }}</th><th scope="col">{{ t('col.kind') }}</th><th scope="col">{{ t('col.zone') }}</th><th scope="col">{{ t('col.status') }}</th></tr></thead><tbody>
+{% for r in L.links %}<tr data-kind="{{ r.kind }}" data-state="{{ r.state }}"><td class="u"><code>{{ r.source_url }}</code></td><td class="u"><code>{{ r.target_url }}</code></td><td>{{ r.anchor or '—' }}{% if r.rel %} <span class="muted small">({{ r.rel|join(', ') }})</span>{% endif %}</td><td>{{ t('kind.' ~ r.kind) }}</td><td>{{ t('zone.' ~ r.zone) }}</td><td>{{ t('link.state.' ~ r.state) }}{% if r.target_status is not none %} · {{ r.target_status }}{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+</div>
+{{ more(L.links|length, L.links_total) }}
+{% endif %}
+<p class="small"><a href="/v1/audits/{{ a.id }}/links?download=1">{{ t('deep.download') }}</a></p>
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ performance #}
+{% if only is none or only == 'sec-performance' %}
+<section id="sec-performance" aria-labelledby="perf-h">
+<h2 id="perf-h">{{ t('sec.perf') }}</h2>
+{% set P = report.performance %}
+{% if P.status == 'not_measured' %}{{ nm(P) }}{% else %}
+<div class="banner lab" role="note"><strong>LAB</strong> · {{ P.lab_note }}</div>
+<h3>{{ t('perf.pages.title') }}</h3>
+<div class="tablewrap"><table class="dense perf" data-sortable><caption class="sr">{{ t('perf.pages.title') }}</caption><thead><tr><th scope="col" data-sort="text">{{ t('col.page') }}</th><th scope="col" data-sort="text">{{ t('perf.col.device') }}</th><th scope="col" data-sort="num">TTFB</th><th scope="col" data-sort="num">FCP</th><th scope="col" data-sort="num">LCP</th><th scope="col" data-sort="num">CLS</th><th scope="col" data-sort="num">TBT*</th><th scope="col" data-sort="num">DCL</th><th scope="col" data-sort="num">Load</th><th scope="col" data-sort="num">{{ t('perf.col.requests') }}</th><th scope="col" data-sort="num">{{ t('perf.col.total') }}</th><th scope="col" data-sort="num">{{ t('perf.col.html') }}</th></tr></thead><tbody>
+{% for r in P.rows %}
+{% if r.error %}<tr><td class="u"><code>{{ r.url }}</code></td><td>{{ t('perf.device.' ~ r.device) }}</td><td colspan="10">{{ t('perf.error', reason=r.error_text or r.error) }}</td></tr>
+{% else %}<tr><td class="u"><code>{{ r.url }}</code></td><td>{{ t('perf.device.' ~ r.device) }}</td>
+<td data-v="{{ r.ttfb_ms if r.ttfb_ms is not none else -1 }}">{{ rated(r, 'ttfb_ms', r.ttfb_ms|ms) }}</td>
+<td data-v="{{ r.fcp_ms if r.fcp_ms is not none else -1 }}">{{ rated(r, 'fcp_ms', r.fcp_ms|ms) }}</td>
+<td data-v="{{ r.lcp_ms if r.lcp_ms is not none else -1 }}">{{ rated(r, 'lcp_ms', r.lcp_ms|ms) }}</td>
+<td data-v="{{ r.cls if r.cls is not none else -1 }}">{{ rated(r, 'cls', r.cls|clsfmt) }}</td>
+<td data-v="{{ r.tbt_ms if r.tbt_ms is not none else -1 }}">{{ rated(r, 'tbt_ms', r.tbt_ms|ms) }}</td>
+<td data-v="{{ r.dom_content_loaded_ms if r.dom_content_loaded_ms is not none else -1 }}">{{ r.dom_content_loaded_ms|ms }}</td>
+<td data-v="{{ r.load_ms if r.load_ms is not none else -1 }}">{{ r.load_ms|ms }}</td>
+<td data-v="{{ r.requests }}">{{ r.requests }}</td><td data-v="{{ r.total_kb }}">{{ r.total_kb|num }}</td><td data-v="{{ r.html_kb }}">{{ r.html_kb|num }}</td></tr>
+{% endif %}
+{% endfor %}
+</tbody></table></div>
+<p class="muted small">{{ t('perf.tbt.note') }}</p>
+{{ more(P.rows|length, P.rows_total) }}
+
+{% if P.by_type %}
+<h3>{{ t('perf.types.title') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('perf.types.title') }}</caption><thead><tr><th scope="col">{{ t('perf.col.type') }}</th><th scope="col">{{ t('col.count') }}</th><th scope="col">{{ t('perf.col.kb') }}</th></tr></thead><tbody>
+{% for x in P.by_type %}<tr><td>{{ x.type }}</td><td>{{ x.count }}</td><td>{{ x.kb|num }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{% if P.third_party %}
+<h3>{{ t('perf.third.title') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('perf.third.title') }}</caption><thead><tr><th scope="col">{{ t('col.domain') }}</th><th scope="col">{{ t('perf.col.requests') }}</th><th scope="col">{{ t('perf.col.kb') }}</th></tr></thead><tbody>
+{% for h in P.third_party %}<tr><td class="u"><code>{{ h.host }}</code></td><td>{{ h.requests }}</td><td>{{ h.kb|num }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+<h3>{{ t('perf.uncompressed.title') }}</h3>
+{% if P.uncompressed %}<ul class="plain">{% for u in P.uncompressed %}<li class="u"><code>{{ u }}</code></li>{% endfor %}</ul>{% else %}<p class="muted">{{ t('perf.none.list') }}</p>{% endif %}
+<h3>{{ t('perf.nocache.title') }}</h3>
+{% if P.no_cache %}<ul class="plain">{% for u in P.no_cache %}<li class="u"><code>{{ u }}</code></li>{% endfor %}</ul>{% else %}<p class="muted">{{ t('perf.none.list') }}</p>{% endif %}
+
+{% set mrows = P.rows|selectattr('mobile')|list %}
+{% if mrows %}
+<h3>{{ t('perf.mobile.title') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('perf.mobile.title') }}</caption><thead><tr><th scope="col">{{ t('col.page') }}</th><th scope="col">{{ t('perf.mobile.overflow') }}</th><th scope="col">{{ t('perf.mobile.font') }}</th><th scope="col">{{ t('perf.mobile.tap') }}</th><th scope="col">{{ t('perf.mobile.viewport') }}</th><th scope="col">{{ t('perf.blocking') }}</th></tr></thead><tbody>
+{% for r in mrows %}{% set m = r.mobile %}<tr><td class="u"><code>{{ r.url }}</code></td><td>{{ yesno(m.get('horizontal_overflow')) }}</td><td>{% if m.get('small_font_share') is not none %}{{ ((m.get('small_font_share') or 0) * 100)|round|int }}%{% else %}—{% endif %}</td><td>{{ m.get('small_tap_targets', '—') }}</td><td>{{ yesno(m.get('viewport_meta')) }}</td><td>{{ r.render_blocking }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ field data (CrUX) #}
+{% if only is none or only == 'sec-field' %}
+<section id="sec-field" aria-labelledby="field-h">
+<h2 id="field-h">{{ t('sec.field') }} <span class="badge">{{ t('field.badge') }}</span></h2>
+{% set F = report.field %}
+{% if F.status == 'not_measured' %}{{ nm(F) }}{% else %}
+<div class="banner info" role="note"><strong>{{ t('field.badge') }}</strong> · {{ F.note }}</div>
+<p class="muted small">{{ t('field.scope') }}: {{ t('field.scope.' ~ F.scope) if F.scope else '—' }} · {{ t('field.device') }}: {{ t('field.device.' ~ F.form_factor) if F.form_factor in ('PHONE', 'DESKTOP') else t('field.device.all') }}{% if F.period_first and F.period_last %} · {{ t('field.period') }}: {{ F.period_first }} – {{ F.period_last }}{% endif %}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('sec.field') }}</caption><thead><tr><th scope="col">{{ t('field.col.metric') }}</th><th scope="col">{{ t('field.col.p75') }}</th><th scope="col">{{ t('field.col.rating') }}</th><th scope="col">{{ t('field.col.dist') }}</th></tr></thead><tbody>
+{% for m in F.metrics %}<tr><th scope="row">{{ m.label }}</th><td>{{ m.p75_text }}</td><td>{% if m.rating %}<span class="rt rt-{{ m.rating }}">{{ t('perf.rating.' ~ m.rating) }}</span>{% else %}—{% endif %}</td>
+<td>{% if m.good_pct is not none and m.needs_improvement_pct is not none and m.poor_pct is not none %}<div class="sharebar" role="img" aria-label="{{ m.good_pct|num }}% / {{ m.needs_improvement_pct|num }}% / {{ m.poor_pct|num }}%"><span class="sb-good" style="width:{{ m.good_pct }}%"></span><span class="sb-mid" style="width:{{ m.needs_improvement_pct }}%"></span><span class="sb-poor" style="width:{{ m.poor_pct }}%"></span></div><span class="small">{{ m.good_pct|num }}% / {{ m.needs_improvement_pct|num }}% / {{ m.poor_pct|num }}%</span>{% else %}—{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ images #}
+{% if only is none or only == 'sec-images' %}
+<section id="sec-images" aria-labelledby="img-h">
+<h2 id="img-h">{{ t('sec.images') }}</h2>
+{% set I = report.images %}
+{% if I.status == 'not_measured' %}{{ nm(I) }}{% else %}
+<div class="grid cols4">
+{{ stat(I.rows_total, t('img.count')) }}
+{{ stat((I.total_kb|num) ~ ' KB', t('img.total')) }}
+{% for f in I.by_format[:4] %}{{ stat(f.count ~ ' · ' ~ (f.kb|num) ~ ' KB', f.format) }}{% endfor %}
+</div>
+<p class="muted small">{{ I.thresholds_note }}</p>
+{% if I.rows %}
+<h3>{{ t('img.heaviest') }}</h3>
+
+{{ imgtable(I.rows[:10]) }}
+{% if I.rows|length > 10 %}<details><summary>{{ t('find.more', n=I.rows|length - 10) }}</summary>{{ imgtable(I.rows[10:]) }}</details>{% endif %}
+{{ more(I.rows|length, I.rows_total) }}
+{% else %}<p class="muted">{{ t('perf.none.list') }}</p>{% endif %}
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ indexability #}
+{% if only is none or only == 'sec-indexability' %}
+<section id="sec-indexability" aria-labelledby="idx-h">
+<h2 id="idx-h">{{ t('sec.index') }}</h2>
+{% set X = report.indexability %}
+{% if X.status == 'not_measured' %}{{ nm(X) }}{% else %}
+<div class="banner info" role="note">{{ X.note }}</div>
+<div class="grid cols4">{{ stat(X.indexable_count, t('idx.indexable')) }}{{ stat(X.blocked_count, t('idx.blocked')) }}</div>
+<div class="tablewrap"><table class="dense" data-sortable><caption class="sr">{{ t('sec.index') }}</caption><thead><tr><th scope="col" data-sort="text">{{ t('col.page') }}</th><th scope="col" data-sort="num">HTTP</th><th scope="col" data-sort="text">{{ t('idx.col.indexable') }}</th><th scope="col">{{ t('idx.col.reasons') }}</th><th scope="col">{{ t('idx.col.canonical') }}</th><th scope="col" data-sort="text">{{ t('col.sitemap') }}</th><th scope="col" data-sort="num">{{ t('col.inlinks') }}</th><th scope="col" data-sort="num">{{ t('col.depth') }}</th></tr></thead><tbody>
+{% for r in X.rows %}<tr><td class="u"><code>{{ r.url }}</code></td><td data-v="{{ r.status if r.status is not none else -1 }}">{{ r.status if r.status is not none else '—' }}</td><td><strong class="{{ 'ok' if r.indexable else 'bad' }}">{{ yesno(r.indexable) }}</strong></td><td>{% if r.reason_texts %}<ul class="plain">{% for x in r.reason_texts %}<li>{{ x }}</li>{% endfor %}</ul>{% else %}—{% endif %}</td><td class="u">{% if r.canonical %}<code>{{ r.canonical }}</code>{% else %}—{% endif %}</td><td>{{ yesno(r.in_sitemap) }}</td><td data-v="{{ r.inlinks if r.inlinks is not none else -1 }}">{{ r.inlinks if r.inlinks is not none else '—' }}</td><td data-v="{{ r.depth if r.depth is not none else -1 }}">{{ r.depth if r.depth is not none else '—' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{{ more(X.rows|length, X.rows_total) }}
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ search console #}
+{% macro gsctable(rows, title, first=none) %}
+<h3>{{ title }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ title }}</caption><thead><tr><th scope="col">{{ first or t('gsc.col.query') }}</th><th scope="col">{{ t('gsc.clicks') }}</th><th scope="col">{{ t('gsc.impressions') }}</th><th scope="col">{{ t('gsc.ctr') }}</th><th scope="col">{{ t('gsc.position') }}</th></tr></thead><tbody>
+{% for r in rows %}<tr><td class="u"><code>{{ r.key }}</code></td><td>{{ r.clicks }}</td><td>{{ r.impressions }}</td><td>{{ r.ctr_pct|num }}</td><td>{{ r.position|num }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endmacro %}
+{% if only is none or only == 'sec-gsc' %}
+<section id="sec-gsc" aria-labelledby="gsc-h">
+<h2 id="gsc-h">{{ t('sec.gsc') }} <span class="badge">{{ t('vis.badge') }}</span></h2>
+{% set G = report.gsc %}
+{% if G.status == 'not_measured' %}{{ nm(G) }}
+{% if G.can_connect and interactive %}<p><a class="btn" href="/connect/google">{{ t('gsc.connect.cta') }}</a> <span class="muted small">{{ t('gsc.connect.hint') }}</span></p>{% endif %}
+{% else %}
+<p class="muted">{{ G.note }}</p>
+<p class="muted small">{{ G.delay_note }}</p>
+<p class="small"><strong>{{ t('gsc.property') }}:</strong> <code>{{ G.property or '—' }}</code> · <strong>{{ t('gsc.permission') }}:</strong> {{ G.permission or '—' }}{% if G.account %} · <strong>{{ t('gsc.account') }}:</strong> {{ G.account }}{% endif %}</p>
+<div class="grid cols4">
+{{ stat(G.totals.get('clicks', 0)|int, t('gsc.clicks')) }}
+{{ stat(G.totals.get('impressions', 0)|int, t('gsc.impressions')) }}
+{{ stat(((G.totals.get('ctr', 0) * 100)|num) ~ '%', t('gsc.ctr')) }}
+{{ stat(G.totals.get('position', 0)|num, t('gsc.position')) }}
+</div>
+{% if G.top_queries %}{{ gsctable(G.top_queries, t('gsc.queries')) }}{% endif %}
+{% if G.top_pages %}{{ gsctable(G.top_pages, t('gsc.pages'), t('gsc.col.page')) }}{% endif %}
+<h3>{{ t('gsc.inspect.title') }}</h3>
+{% if G.inspections %}
+<p class="small">{{ t('gsc.inspect.summary', indexed=G.indexed_count, not_indexed=G.not_indexed_count, mismatch=G.mismatch_count) }}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('gsc.inspect.title') }}</caption><thead><tr><th scope="col">{{ t('col.page') }}</th><th scope="col">{{ t('gsc.inspect.indexed') }}</th><th scope="col">{{ t('gsc.inspect.coverage') }}</th><th scope="col">{{ t('gsc.inspect.canonical') }}</th><th scope="col">{{ t('gsc.inspect.crawl') }}</th><th scope="col">{{ t('gsc.inspect.crawled_as') }}</th></tr></thead><tbody>
+{% for i in G.inspections %}<tr><td class="u"><code>{{ i.url }}</code></td>
+{% if i.error %}<td colspan="5">{{ i.error_text }}</td>{% else %}
+<td><strong class="{{ 'ok' if i.indexed else ('bad' if i.indexed is false else '') }}">{% if i.indexed is none %}{{ t('gsc.inspect.unknown') }}{% elif i.indexed %}{{ t('idx.yes') }}{% else %}{{ t('idx.no') }}{% endif %}</strong></td>
+<td>{{ i.coverage_state or '—' }}</td>
+<td class="u">{% if i.google_canonical %}<code>{{ i.google_canonical }}</code>{% else %}—{% endif %}{% if i.canonical_mismatch %}<br><strong class="bad">{{ t('gsc.inspect.mismatch') }}</strong>{% if i.user_canonical %} <span class="muted small">({{ t('gsc.inspect.declared') }}: <code>{{ i.user_canonical }}</code>)</span>{% endif %}{% endif %}</td>
+<td>{{ i.last_crawl or '—' }}</td><td>{{ i.crawled_as or '—' }}</td>{% endif %}</tr>{% endfor %}
+</tbody></table></div>
+{{ more(G.inspections|length, G.inspections_total) }}
+{% else %}<p class="muted">{{ t('perf.none.list') }}</p>{% endif %}
+{% if G.sitemaps %}
+<h3>{{ t('gsc.sitemaps.title') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('gsc.sitemaps.title') }}</caption><thead><tr><th scope="col">{{ t('gsc.sitemaps.title') }}</th><th scope="col">{{ t('gsc.sitemap.submitted') }}</th><th scope="col">{{ t('gsc.sitemap.downloaded') }}</th><th scope="col">{{ t('gsc.sitemap.errors') }}</th><th scope="col">{{ t('gsc.sitemap.warnings') }}</th></tr></thead><tbody>
+{% for m in G.sitemaps %}<tr><td class="u"><code>{{ m.path }}</code>{% if m.pending %} <span class="muted small">({{ t('gsc.sitemap.pending') }})</span>{% endif %}</td><td>{{ m.last_submitted or '—' }}</td><td>{{ m.last_downloaded or '—' }}</td><td{% if m.errors %} class="bad"{% endif %}>{{ m.errors }}</td><td>{{ m.warnings }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ visibility #}
+{% if only is none or only == 'sec-visibility' %}
+<section id="sec-visibility" aria-labelledby="vis-h">
+<h2 id="vis-h">{{ t('sec.vis') }} <span class="badge">{{ t('vis.badge') }}</span></h2>
+{% set V = report.visibility %}
+{% if V.status == 'not_measured' %}{{ nm(V) }}{% else %}
+<p class="muted">{{ V.disclaimer }}</p>
+<div class="grid cols4">
+{% for it in V.items %}
+<div class="card{% if not it.available %} nm{% endif %}"><h3>{{ it.label }}</h3>
+{% if it.value %}<p>{{ it.value }}</p>{% endif %}
+{% if it.error_text %}<p class="small">{{ it.error_text }}</p>{% endif %}
+{% if it.detail %}<p class="muted small">{{ it.detail }}</p>{% endif %}
+</div>
+{% endfor %}
+</div>
+{% if V.notes %}<h3>{{ t('vis.notes') }}</h3><ul class="plain">{% for n in V.notes %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
+{% endif %}
+</section>
+{% endif %}

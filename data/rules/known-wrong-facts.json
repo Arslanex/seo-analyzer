@@ -1,0 +1,86 @@
+{
+  "_doc": "Known-wrong statements the LLM must never assert (belge 03 s.11). Dates are the source file's own date; null = the source file carries none. All entries are the upstream project claims and must be re-verified against primary sources (Google Search Central, web.dev) before being stated as fact in a report.",
+  "version": "1.0",
+  "facts": [
+    {
+      "id": "fid-current",
+      "statement_wrong": "FID (First Input Delay) is a Core Web Vitals metric.",
+      "statement_right": "INP replaced FID; FID was removed from CrUX and PageSpeed Insights on 2024-09-09.",
+      "pattern": "\\bFID\\b|First Input Delay",
+      "source_file": "upstream/skills/seo/references/cwv-thresholds.md",
+      "last_verified": "2026-09-23"
+    },
+    {
+      "id": "vsi-cwv2",
+      "statement_wrong": "'Visual Stability Index' or 'Core Web Vitals 2.0' are real metrics.",
+      "statement_right": "LCP, INP and CLS are the entire CWV set.",
+      "pattern": "Visual Stability Index|\\bVSI\\b|Core Web Vitals 2\\.0|CWV 2\\.0",
+      "source_file": "upstream/skills/seo/references/cwv-thresholds.md",
+      "last_verified": "2026-09-23"
+    },
+    {
+      "id": "howto-recommend",
+      "statement_wrong": "Recommend adding HowTo schema.",
+      "statement_right": "HowTo rich results were deprecated (Sept 2023); never recommend HowTo schema.",
+      "pattern": "(?i)(add|adding|implement|use|using|recommend|create)\\w*\\s+(an?\\s+|the\\s+)?howto\\s+(schema|markup|structured)",
+      "source_file": "upstream/skills/seo/SKILL.md",
+      "last_verified": null
+    },
+    {
+      "id": "faq-rich-result",
+      "statement_wrong": "Add FAQPage schema to get a Google SERP feature.",
+      "statement_right": "Per the source, Google retired FAQ rich results for all sites on 2026-05-07; do not recommend new FAQPage for a SERP benefit.",
+      "pattern": "(?i)(add|adding|implement|use|using|recommend|create)\\w*\\s+(an?\\s+|the\\s+)?faq(page)?\\s+(schema|markup|structured)",
+      "source_file": "upstream/skills/seo/SKILL.md",
+      "last_verified": null
+    },
+    {
+      "id": "gptbot-chatgpt-search",
+      "statement_wrong": "GPTBot status determines ChatGPT Search citation.",
+      "statement_right": "GPTBot is OpenAI's training crawler; ChatGPT Search uses OAI-SearchBot.",
+      "pattern": "(?i)GPTBot.{0,80}(ChatGPT Search|citab|cited|citation)",
+      "source_file": "upstream/agents/seo-geo.md",
+      "last_verified": null
+    },
+    {
+      "id": "google-extended-aio",
+      "statement_wrong": "The Google-Extended robots rule controls AI Overviews inclusion.",
+      "statement_right": "AI Overviews follow Googlebot; Google-Extended governs Gemini/Vertex training and grounding.",
+      "pattern": "(?i)Google-Extended.{0,80}(AI Overviews?|AI Mode)",
+      "source_file": "upstream/agents/seo-geo.md",
+      "last_verified": null
+    },
+    {
+      "id": "llmstxt-google",
+      "statement_wrong": "llms.txt affects Google Search ranking.",
+      "statement_right": "Google Search ignores llms.txt; it is an optional signal for other systems.",
+      "pattern": "(?i)llms\\.txt.{0,60}(Google (Search|rank)|ranking factor)",
+      "source_file": "upstream/agents/seo-geo.md",
+      "last_verified": null
+    },
+    {
+      "id": "wordcount-ranking",
+      "statement_wrong": "Word count is a direct Google ranking factor.",
+      "statement_right": "Google does not use word count as a ranking factor; word thresholds are topical-coverage floors.",
+      "pattern": "(?i)word[- ]count.{0,40}ranking (factor|signal)",
+      "source_file": "upstream/agents/seo-content.md",
+      "last_verified": null
+    },
+    {
+      "id": "title-60-google-rule",
+      "statement_wrong": "Google limits titles to 60 characters / descriptions to 160.",
+      "statement_right": "These are display heuristics, not a published search engine limit.",
+      "pattern": "(?i)Google.{0,40}(limit|cuts?|truncat)\\w*.{0,30}\\b(60|160)\\b",
+      "source_file": "upstream/scripts/page_checks.py",
+      "last_verified": null
+    },
+    {
+      "id": "eeat-ranking-score",
+      "statement_wrong": "E-E-A-T is a Google ranking score with published weights.",
+      "statement_right": "E-E-A-T is a Quality Rater Guidelines concept; Google publishes no numeric weights.",
+      "pattern": "(?i)(Google|ranking).{0,40}E-?E-?A-?T.{0,30}(score|weights?)\\b.{0,20}(of|is|are) \\d+",
+      "source_file": "upstream/agents/seo-content.md",
+      "last_verified": null
+    }
+  ]
+}

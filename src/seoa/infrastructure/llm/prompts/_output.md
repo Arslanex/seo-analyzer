@@ -1,0 +1,1 @@
+Return only JSON that conforms to the provided schema. No prose outside JSON. Write all free-text fields (note, text, summary, answer) in {output_language}. Quotes must stay in the page's original language, copied exactly.

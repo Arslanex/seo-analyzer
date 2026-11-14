@@ -1,0 +1,49 @@
+{% extends 'app_base.html' %}
+{% from '_app_macros.html' import ico with context %}
+{% from '_macros.html' import sev_badge with context %}
+{% set a = report.audit %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>{{ t('plan.title') }}</h1>
+<p>{{ t('shell.audit_pill', host=host_of(a.requested_url), date=fmt_date(a.finished_at or a.started_at, false)) }}</p>
+</div>
+<div class="head-actions"><a class="btn-soft" href="/audits/{{ a.id }}/chat?lang={{ lang }}">{{ ico('chat', 16) }}{{ t('an.ask_page') }}</a></div>
+</div>
+
+{% if report.summary.quick_win_recommendation_ids %}
+<section class="sect" aria-labelledby="pl-quick">
+<h2 id="pl-quick">{{ t('plan.quick') }}</h2>
+<p class="muted" style="margin:0;font-size:.85rem">{{ t('summary.quick.def') }}</p>
+<div class="card2 rows">
+{% for rid in report.summary.quick_win_recommendation_ids %}{% set r = rec_by_id[rid] %}
+<div>
+{{ sev_badge(r.severity.value, t, severity_shape) }}
+<div class="grow"><div class="t">{{ r.title }}</div><div class="s">{{ t('effort.' ~ r.effort.level) }} · {{ t('impact.' ~ r.impact.level) }}</div></div>
+<a class="btn-line btn-sm" href="/audits/{{ a.id }}/chat?finding={{ r.finding_ids[0] }}&amp;lang={{ lang }}">{{ t('an.ask') }}</a>
+</div>
+{% endfor %}
+</div>
+</section>
+{% endif %}
+
+<div class="phases2">
+{% for ph in report.action_plan.phases %}
+<section class="card2 phase2" aria-labelledby="ph-{{ loop.index }}">
+<h2 id="ph-{{ loop.index }}">{{ ph.name }}</h2>
+<p class="muted" style="margin:2px 0 10px;font-size:.82rem">{{ ph.timeframe }}</p>
+{% if ph.items %}
+<ol class="plain" style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px">
+{% for it in ph.items %}{% set r = rec_by_id[it.recommendation_id] %}
+<li style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+{{ sev_badge(r.severity.value, t, severity_shape) }}
+<div style="flex:1 1 260px;min-width:0">{% set f0 = report.finding(r.finding_ids[0]) %}<a href="/audits/{{ a.id }}/analysis?tab={{ f0.category.value }}&amp;lang={{ lang }}#{{ f0.id }}" style="font-weight:500;text-decoration:none">{{ r.title }}</a><div class="muted" style="font-size:.78rem">{{ t('effort.' ~ r.effort.level) }} · {{ t('impact.' ~ r.impact.level) }}</div></div>
+</li>
+{% endfor %}
+</ol>
+{% elif not ph.notes %}<p class="muted" style="margin:0">{{ t('plan.empty') }}</p>{% endif %}
+{% for n in ph.notes %}<p style="margin:10px 0 0;font-size:.85rem">{{ n }}</p>{% endfor %}
+</section>
+{% endfor %}
+</div>
+{% endblock %}

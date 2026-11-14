@@ -1,0 +1,40 @@
+{% extends 'app_base.html' %}
+{% from '_app_macros.html' import ico with context %}
+{% block content %}
+<div class="page-head">
+<div style="max-width:640px">
+<h1>{{ t('set.title') }}</h1>
+<p>{{ t('set.lead') }}</p>
+</div>
+<div class="head-actions">
+<span class="pill pill-good">{{ t('set.n_ready', n=n_ready) }}</span>
+{% if n_missing %}<span class="pill pill-attention">{{ t('set.n_missing', n=n_missing) }}</span>{% endif %}
+</div>
+</div>
+
+{% if google_msg %}<div class="banner2" role="status">{{ t('home.google.msg.' ~ google_msg) }}</div>{% endif %}
+
+<div class="card2 conn">
+{% for c in conns %}
+<div>
+<div class="grow">
+<div class="cname"><span>{{ c.name }}</span><span class="pill pill-{{ 'good' if c.ready else 'attention' }}">{{ t('set.ready') if c.ready else t('set.missing') }}</span></div>
+<div class="tx">{{ c.text }}</div>
+<div class="af">{{ c.affects }}</div>
+{% if c.get('test') %}<div class="tout" aria-live="polite" hidden></div>{% endif %}
+</div>
+{% if c.get('test') %}<button type="button" class="btn-line" data-test="{{ c.test }}" data-lang="{{ lang }}" data-msg-testing="{{ t('set.testing') }}" data-msg-label="{{ t('set.test') }}" data-msg-ready="{{ t('set.ready') }}" data-msg-error="{{ t('set.error') }}">{{ t('set.test') }}</button>{% endif %}
+{% if c.get('link') %}<a class="btn-line" href="{{ c.link }}" rel="noopener">{{ t('set.newkey') }}</a>{% endif %}
+{% if c.action == 'connect' %}<a class="btn-accent" href="/connect/google">{{ t('set.connect') }}</a>
+{% elif c.action == 'disconnect' %}<form method="post" action="/disconnect/google"><button type="submit" class="btn-line">{{ t('home.google.disconnect') }}</button></form>{% endif %}
+</div>
+{% endfor %}
+<div>
+<div class="grow">
+<div class="cname"><span>{{ t('set.budget') }}</span></div>
+<div class="tx">{{ t('set.budget.text', spent='%.2f'|format(spend.spent_usd), cap='%.2f'|format(spend.cap_usd)) }}</div>
+</div>
+</div>
+</div>
+<p class="muted" style="margin:0;font-size:.82rem">{{ t('set.secret_note') }}</p>
+{% endblock %}

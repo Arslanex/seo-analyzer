@@ -1,0 +1,35 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-14T09:00:00Z" },
+  "title": "SEO Analyzer arayüz tasarımı",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 820, "expand": "fill", "is_interactive": true, "title": "1 · Yeni denetim" },
+    "Progress.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 820, "expand": "fill", "is_interactive": true, "title": "2 · Analiz sürüyor" },
+    "Overview.dc.html": { "x": 0, "y": 940, "w": 1440, "h": 1300, "expand": "fill", "is_interactive": true, "title": "3 · Genel bakış" },
+    "Analysis.dc.html": { "x": 1520, "y": 940, "w": 1440, "h": 1280, "expand": "fill", "is_interactive": true, "title": "4 · Analiz › İçerik" },
+    "Chat.dc.html": { "x": 0, "y": 2360, "w": 1440, "h": 960, "expand": "fill", "is_interactive": true, "title": "5 · Sohbet" },
+    "Settings.dc.html": { "x": 1520, "y": 2360, "w": 1440, "h": 820, "expand": "fill", "is_interactive": true, "title": "6 · Ayarlar › Bağlantılar" },
+    "Mobile.dc.html": { "x": 0, "y": 3440, "w": 390, "h": 844, "is_interactive": true, "title": "7 · Mobil" }
+  },
+  "order": [
+    "Main.dc.html",
+    "Progress.dc.html",
+    "Overview.dc.html",
+    "Analysis.dc.html",
+    "Chat.dc.html",
+    "Settings.dc.html",
+    "Mobile.dc.html"
+  ],
+  "notes": {
+    "title": { "x": 0, "y": -320, "text": "SEO Analyzer: arayüz planı", "kind": "title1", "maxW": 2960 },
+    "n1": { "x": 0, "y": -900, "w": 380, "size": "m", "fill": "teal", "text": "1 · Nerede olduğunu hep bil\nHer bölüm ayrı sayfa. Sol menüde yalnız 7 yer var: Genel bakış, Sohbet, Analiz, Arama, Rakipler, Eylem planı, Geçmiş. Ayarlar en altta." },
+    "n2": { "x": 420, "y": -900, "w": 380, "size": "m", "fill": "blue", "text": "2 · Analiz sekmeli\nTeknik, Sayfa içi, İçerik, Bağlantılar, Görseller, Schema, AI hazırlığı, Performans. Menü uzamaz, kullanıcı kaybolmaz. Her sayfa aynı kalıp: skor, bulgular, geçen kontroller." },
+    "n3": { "x": 840, "y": -900, "w": 380, "size": "m", "fill": "purple", "text": "3 · Sohbet her yerde\nMenüde ayrı bir sayfa var. Her bulgunun yanında 'Sor' düğmesi sohbeti o bulgunun bağlamıyla açar. Cevaplar yalnız bu denetimin verisine dayanır ve kaynak gösterir." },
+    "n4": { "x": 1260, "y": -900, "w": 380, "size": "m", "fill": "orange", "text": "4 · Dürüst durumlar\nÖlçülmeyen şey boş bırakılmaz: nedeni ve çözümü yazılır (örneğin 'Google bağlı değil → Bağla'). Bağlantıların durumu Ayarlar'da tek yerde." },
+    "n6": { "x": 1680, "y": -900, "w": 380, "size": "m", "fill": "green", "text": "5 · Bekleme boş geçmesin\nAnaliz sürerken yüzde 0'dan 100'e sayar, çember dolar ve 'şu an ne yapılıyor' yazısı değişir. Adımlar tek tek işaretlenir. Önizlemek için Play'e basın." },
+    "n5": { "x": 470, "y": 3440, "w": 380, "size": "m", "fill": "gray", "text": "Mobilde menü alt sekme çubuğuna iner: Genel, Analiz, Sohbet, Plan, Ayarlar. Rakipler, Arama ve Geçmiş de aynı kalıbı kullanır, ayrı ekran çizmedim." }
+  },
+  "designSystems": []
+}

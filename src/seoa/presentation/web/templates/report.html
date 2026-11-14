@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import sev_icon, sev_badge, gauge with context %}
+{% set a = report.audit %}
+{% set ov = report.scores.overall %}
+{% block content %}
+<h1>{{ a.requested_url }}</h1>
+<div class="meta">
+<span>{{ t('mode.' ~ a.mode.value) }}</span>
+<span>{{ t('report.generated') }}: {{ fmt_dt(a.finished_at or a.started_at) }}</span>
+<span>{{ t('status.' ~ a.status.value) }}</span>
+<span>{{ t('report.versions', score=report.versions.score_version, rule=report.versions.rule_version) }}</span>
+</div>
+<div class="actions">
+{% if interactive and is_final and a.status.value != 'failed' %}
+<a class="btn secondary" href="/audits/{{ a.id }}?lang={{ lang }}">{{ t('nav.overview') }}</a>
+<a class="btn secondary" href="/audits/{{ a.id }}/analysis?lang={{ lang }}">{{ t('nav.analysis') }}</a>
+<a class="btn secondary" href="/audits/{{ a.id }}/chat?lang={{ lang }}">{{ t('nav.chat') }}</a>
+{% endif %}
+<a class="btn secondary" href="/?lang={{ lang }}">{{ t('report.back') }}</a>
+<a class="btn secondary" href="?lang={{ other_lang }}">{{ t('report.lang.switch') }} ({{ other_lang|upper }})</a>
+<a class="btn secondary" href="/v1/audits/{{ a.id }}/report?format=json&amp;lang={{ lang }}">{{ t('report.json') }}</a>
+{% if interactive and is_final and a.status.value != 'failed' %}
+<button type="button" class="secondary" data-action-post="/v1/audits/{{ a.id }}/rerun" data-modules="checks">{{ t('report.rerun.checks') }}</button>
+<button type="button" class="secondary" data-action-post="/v1/audits/{{ a.id }}/rerun" data-modules="advise">{{ t('report.rerun.ai') }}</button>
+{% endif %}
+</div>
+{% if a.status.value != 'failed' %}
+<nav class="secnav" aria-label="{{ t('nav.sections') }}">
+<a href="#scores-h">{{ t('score.coverage') }}</a>
+<a href="#cats-h">{{ t('cats.title') }}</a>
+<a href="#findings-h">{{ t('find.title') }}</a>
+<a href="#sec-glance">{{ t('sec.glance') }}</a>
+<a href="#sec-links">{{ t('sec.links') }}</a>
+<a href="#sec-performance">{{ t('sec.perf') }}</a>
+<a href="#sec-field">{{ t('sec.field') }}</a>
+<a href="#sec-images">{{ t('sec.images') }}</a>
+<a href="#sec-indexability">{{ t('sec.index') }}</a>
+<a href="#sec-gsc">{{ t('sec.gsc') }}</a>
+<a href="#sec-visibility">{{ t('sec.vis') }}</a>
+<a href="#sec-techstack">{{ t('sec.tech') }}</a>
+<a href="#sec-setup">{{ t('sec.setup') }}</a>
+<a href="#sec-previews">{{ t('sec.prev') }}</a>
+<a href="#sec-screenshots">{{ t('sec.shots') }}</a>
+<a href="#sec-readability">{{ t('sec.read') }}</a>
+<a href="#sec-hreflang">{{ t('sec.hreflang') }}</a>
+<a href="#sec-schemasug">{{ t('sec.schemasug') }}</a>
+<a href="#sec-agentic">{{ t('sec.agentic') }}</a>
+<a href="#sec-history">{{ t('sec.history') }}</a>
+<a href="#sec-competitors">{{ t('sec.competitors') }}</a>
+<a href="#sec-local">{{ t('sec.local') }}</a>
+<a href="#sec-sitemapgen">{{ t('sec.sitemapgen') }}</a>
+<a href="#sec-authority">{{ t('sec.authority') }}</a>
+<a href="#sec-rankings">{{ t('sec.rankings') }}</a>
+</nav>
+{% endif %}
+
+{% if a.status.value == 'failed' %}
+<section class="banner fail" aria-labelledby="fail-h">
+<h2 id="fail-h" style="border:0;margin:0">{{ t('report.failed.title') }}</h2>
+<p>{{ a.error_text or t('report.failed.none') }}</p>
+<p class="muted small">{{ t('report.failed.none') }}</p>
+</section>
+{% else %}
+
+{% if a.status.value == 'partial' %}
+<div class="banner info" role="status">{{ t('report.partial', reason=(report.limitations[0].message if report.limitations else t('reason.partial-sample'))) }}</div>
+{% elif a.status.value == 'canceled' %}
+<div class="banner info" role="status">{{ t('report.canceled') }}</div>
+{% endif %}
+
+{% if ov.gate %}
+<div class="banner gate" role="status">
+<strong>{{ t('gate.title') }}:</strong>
+{% if ov.raw_value is not none %}{{ t('gate.text', reason=ov.gate.message, raw=ov.raw_value|num, cap=ov.gate.cap) }}{% else %}{{ t('gate.text.noraw', reason=ov.gate.message, cap=ov.gate.cap) }}{% endif %}
+{% if ov.gate.finding_id %}<a href="#{{ ov.gate.finding_id }}">{{ t('gate.goto') }} ▸</a>{% endif %}
+</div>
+{% endif %}
+
+{% include '_glance.html' %}
+
+<section aria-labelledby="scores-h">
+<h2 id="scores-h">{{ t('score.health') if report.scores.kind == 'health' else t('score.page') }}</h2>
+<div class="grid cols3">
+<div class="card">
+<div class="score">
+{% if ov.display == 'number' %}
+{{ gauge(ov.value, ov.band, t) }}
+<div><div class="num">{{ ov.value|num }} <span class="muted small">{{ t('score.of') }}</span></div><div class="band band-{{ ov.band }}">{{ t('band.' ~ ov.band) }}</div></div>
+{% else %}
+<div><div class="num" style="font-size:1.5rem">{{ t('score.insufficient') }}</div><p class="muted small">{{ t('score.insufficient.text', coverage=ov.coverage_pct|num) }}</p></div>
+{% endif %}
+</div>
+{% if report.scores.p25 is not none %}<p class="muted small">{{ t('score.p25', p25=report.scores.p25|num) }}</p>{% endif %}
+{% if report.scores.core_overall is not none and report.scores.kind == 'health' %}<p class="muted small">{{ t('score.core', core=report.scores.core_overall|num) }}</p>{% endif %}
+</div>
+<div class="card">
+<h3>{{ t('score.coverage') }}</h3>
+<div class="score"><div class="num">%{{ ov.coverage_pct|num }}</div></div>
+<p class="muted small">{{ t('score.coverage.cat') }}{% if a.mode.value == 'site' and report.crawl.coverage.get('pages_planned') is not none %} · {{ t('score.pages', fetched=report.crawl.coverage.get('pages_fetched', 0), planned=report.crawl.coverage.get('pages_planned', 0)) }}{% endif %}</p>
+</div>
+<div class="card">
+<h3>{{ t('score.confidence') }}</h3>
+<div class="score"><div class="num" style="font-size:1.6rem">{{ t('conf.' ~ ov.confidence) }}</div></div>
+{% for l in report.limitations %}{% if loop.index <= 2 %}<p class="muted small">{{ l.message }}</p>{% endif %}{% endfor %}
+</div>
+</div>
+</section>
+
+{% if report.scope_note %}
+<section id="scope-note" class="scope" aria-labelledby="scope-h">
+<h2 id="scope-h">{{ report.scope_note.title }}</h2>
+<p>{{ report.scope_note.intro }}</p>
+<ul class="plain">{% for it in report.scope_note.items %}<li>{{ it }}</li>{% endfor %}</ul>
+<p>{{ report.scope_note.next_step }}</p>
+<p class="muted small">{{ report.scope_note.model_note }}</p>
+</section>
+{% endif %}
+
+<section aria-labelledby="sum-h">
+<h2 id="sum-h">{{ t('summary.title') }}</h2>
+<h3>{{ t('summary.counts') }}</h3>
+<ul class="chips">
+{% for sv in severity_order %}
+<li><a class="sev sev-{{ sv }}" href="?severity={{ sv }}&amp;lang={{ lang }}#findings">{{ sev_icon(severity_shape[sv]) }}<span>{{ t('sev.' ~ sv) }}: {{ report.summary.counts[sv] }}</span></a></li>
+{% endfor %}
+</ul>
+{% if report.synthesis and report.synthesis.summary %}
+<div class="card"><h3>{{ t('summary.ai') }} <span class="badge est">{{ t('adv.badge') }}</span></h3><p>{{ report.synthesis.summary }}</p>
+{% for l in report.synthesis.links %}<p class="muted small">↔ {{ l.text }}</p>{% endfor %}</div>
+{% endif %}
+{% if report.summary.zero_findings %}
+<div class="card"><p><strong>{{ t('summary.none') }}</strong></p><p class="muted">{{ t('summary.none.note') }}</p></div>
+{% else %}
+<div class="grid cols3" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+<div class="card"><h3>{{ t('summary.top') }}</h3>
+<ol class="plain">
+{% for fid in report.summary.top_finding_ids %}{% set f = report.finding(fid) %}
+<li><a href="#{{ f.id }}">{{ sev_badge(f.severity.value, t, severity_shape) }} {{ f.message|truncate(120) }}</a> <code class="small">{{ f.check_id }}</code></li>
+{% endfor %}
+</ol></div>
+<div class="card"><h3>{{ t('summary.quick') }}</h3><p class="muted small">{{ t('summary.quick.def') }}</p>
+{% if report.summary.quick_win_recommendation_ids %}
+<ol class="plain">
+{% for rid in report.summary.quick_win_recommendation_ids %}{% set r = rec_by_id[rid] %}
+<li><a href="#{{ r.finding_ids[0] }}">{{ r.title }}</a></li>
+{% endfor %}
+</ol>{% else %}<p class="muted">{{ t('misc.none') }}</p>{% endif %}
+</div>
+</div>
+{% endif %}
+</section>
+
+<section aria-labelledby="cats-h">
+<h2 id="cats-h">{{ t('cats.title') }}</h2>
+<div class="grid cols4">
+{% for c in report.scores.categories %}
+{% if c.status == 'not_measured' %}
+<div class="card nm"><h3>{{ c.label }}</h3><div class="big">— {{ t('cats.notmeasured') }}</div><p class="small">{{ c.not_measured_text }}</p><p class="small">{{ t('cats.notmeasured.effect') }}</p></div>
+{% else %}
+<div class="card"><h3>{{ c.label }}</h3>
+<div class="score"><div class="num">{{ c.score|num }}</div><span class="muted small">{{ t('cats.weight') }} {{ c.weight_effective|num }}</span></div>
+<div class="bar" role="img" aria-label="{{ c.label }}: {{ c.score|num }} / 100"><span style="width:{{ c.score }}%"></span></div>
+<p class="muted small">{{ t('cats.findings', n=c.finding_ids|length) }}</p>
+{% if c.checks_total %}<p class="small"><strong>{{ t('cats.checks', n=c.checks_passed, m=c.checks_total) }}</strong></p>{% endif %}
+{% for p in c.penalties %}<p class="small">{{ p.check_id }}: {{ p.points|num }}</p>{% endfor %}
+</div>
+{% endif %}
+{% endfor %}
+</div>
+{% for c in report.scores.categories if c.checks %}
+<details class="checks"><summary>{{ c.label }}: {{ t('cats.checks', n=c.checks_passed, m=c.checks_total) }} · {{ t('cats.checks.table') }}</summary>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ c.label }}: {{ t('cats.checks.table') }}</caption><thead><tr><th scope="col">{{ t('checks.col.check') }}</th><th scope="col">{{ t('checks.col.severity') }}</th><th scope="col">{{ t('checks.col.weight') }}</th><th scope="col">{{ t('checks.col.ratio') }}</th><th scope="col">{{ t('checks.col.pages') }}</th><th scope="col">{{ t('checks.col.status') }}</th></tr></thead><tbody>
+{% for k in c.checks %}<tr><td><code>{{ k.check_id }}</code><br><span class="muted small">{{ k.message|truncate(140) }}</span></td><td>{{ sev_badge(k.severity.value, t, severity_shape) }}</td><td>{{ k.weight|num }}</td><td>{{ (k.pass_ratio * 100)|round|int }}%</td><td>{{ k.pages_affected }} / {{ k.pages_assessed }}</td><td><span class="cs cs-{{ k.status }}">{{ t('checks.status.' ~ k.status) }}</span></td></tr>{% endfor %}
+</tbody></table></div>
+</details>
+{% endfor %}
+</section>
+
+<section aria-labelledby="findings-h" id="findings">
+<h2 id="findings-h">{{ t('find.title') }}</h2>
+<nav class="filters" aria-label="{{ t('find.filter') }}">
+<a href="?lang={{ lang }}#findings"{% if not sel_severity and not sel_category %} aria-current="true"{% endif %}>{{ t('find.all') }}</a>
+{% for sv in severity_order %}<a href="?severity={{ sv }}&amp;lang={{ lang }}#findings"{% if sel_severity == sv %} aria-current="true"{% endif %}>{{ t('sev.' ~ sv) }}</a>{% endfor %}
+{% for ct in categories_in_use %}<a href="?category={{ ct }}&amp;lang={{ lang }}#findings"{% if sel_category == ct %} aria-current="true"{% endif %}>{{ t('cat.' ~ ct) }}</a>{% endfor %}
+</nav>
+{% if not findings %}<p class="muted">{{ t('find.empty') }}</p>{% endif %}
+{% for f in findings %}
+<article class="finding{% if f.is_gate %} gate-f{% endif %}" id="{{ f.id }}">
+<header>
+{{ sev_badge(f.severity.value, t, severity_shape) }}
+<h3>{{ f.check_id }}</h3>
+<span class="muted small">{{ t('cat.' ~ f.category.value) }} · {{ t('layer.' ~ f.layer.value) }}</span>
+{% if f.heuristic %}<span class="badge" title="{{ t('find.heuristic') }}">{{ t('layer.B') }}</span>{% endif %}
+</header>
+{% if f.severity_original %}<p class="muted small">{{ t('find.severity_lowered', orig=t('sev.' ~ f.severity_original.value), now=t('sev.' ~ f.severity.value), why=f.severity_reason or '—') }}</p>{% endif %}
+<p>{{ f.message }}</p>
+{% if f.heuristic %}<p class="muted small">{{ t('find.heuristic') }}</p>{% endif %}
+{% if f.scope == 'page' and f.affected.count > 1 or f.urls|length > 1 %}
+<p class="small">{{ t('find.pages', n=f.affected.count) }}{% if f.affected.share_of_sampled_pages is not none %} · {{ t('find.pct', pct=(f.affected.share_of_sampled_pages * 100)|round|int) }}{% endif %}</p>
+{% endif %}
+{% if f.urls %}
+<details><summary>{{ t('find.urls') }}</summary>
+<ul class="plain">{% for u in f.urls[:max_urls] %}<li><code>{{ u }}</code></li>{% endfor %}</ul>
+{% if f.urls|length > max_urls %}<p class="muted small">{{ t('find.more', n=f.urls|length - max_urls) }}</p>{% endif %}
+</details>
+{% endif %}
+{% if f.evidence %}<p class="muted small" style="margin-bottom:0">{{ t('find.evidence') }}</p><code class="ev" dir="auto">{{ f.evidence.value }}</code>{% endif %}
+{% for rid in f.recommendation_ids %}{% set r = rec_by_id[rid] %}
+<details><summary>{{ t('find.reco') }} · {{ t('effort.' ~ r.effort.level) }} · {{ t('impact.' ~ r.impact.level) }}</summary>
+<p>{{ r.body }}</p>
+{% for c in r.context %}<p class="muted small">{{ c }}</p>{% endfor %}
+{% if r.failure_check %}<p class="small"><strong>{{ t('find.failcheck') }}:</strong> {{ r.failure_check }}</p>{% endif %}
+{% if r.leading_indicator %}<p class="small"><strong>{{ t('find.leading') }}:</strong> {{ r.leading_indicator }}</p>{% endif %}
+</details>
+{% endfor %}
+</article>
+{% endfor %}
+</section>
+
+{% include '_deep.html' %}
+{% include '_suite.html' %}
+{% include '_history.html' %}
+{% include '_extra.html' %}
+
+<section aria-labelledby="plan-h">
+<h2 id="plan-h">{{ t('plan.title') }}</h2>
+<div class="phases">
+{% for ph in report.action_plan.phases %}
+<div class="card phase"><h3>{{ ph.name }}</h3><p class="muted small">{{ ph.timeframe }}</p>
+{% if ph.items %}
+<ol>
+{% for it in ph.items %}{% set r = rec_by_id[it.recommendation_id] %}
+<li>{{ sev_badge(r.severity.value, t, severity_shape) }} <a href="#{{ r.finding_ids[0] }}">{{ r.title }}</a> <span class="muted small">· {{ t('effort.' ~ r.effort.level) }} · {{ t('impact.' ~ r.impact.level) }}</span></li>
+{% endfor %}
+</ol>
+{% elif not ph.notes %}<p class="muted">{{ t('plan.empty') }}</p>{% endif %}
+{% for n in ph.notes %}<p class="small">{{ n }}</p>{% endfor %}
+</div>
+{% endfor %}
+</div>
+</section>
+
+{% if report.advisory %}
+<section aria-labelledby="adv-h">
+<h2 id="adv-h">{{ t('adv.title') }} <span class="badge est">{{ report.advisory.label }}</span></h2>
+<p class="muted">{{ report.advisory.note }}</p>
+<div class="grid cols3" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+{% for it in report.advisory.items %}
+<div class="card"><h3>{{ t('adv.' ~ it.kind) }}</h3>
+{% if it.unavailable_reason %}<p>{{ t('adv.unavailable', reason=it.unavailable_reason) }}</p>
+{% else %}
+{% if it.score is not none %}<p><strong>{{ t('adv.score', score=it.score|num) }}</strong> ({{ it.label_text }}) · {{ t('score.confidence') }}: {{ t('conf.' ~ it.confidence) }}</p>
+{% else %}<p class="muted">{{ t('adv.nosscore') }}</p>{% endif %}
+{% if it.coverage_pct is not none %}<p class="muted small">{{ t('adv.coverage', coverage=it.coverage_pct|num) }}</p>{% endif %}
+{% if it.observations %}<h4 style="margin:8px 0 2px">{{ t('adv.observations') }}</h4><ul class="plain">{% for o in it.observations %}<li>{{ o.get('text') }}{% if o.get('quote') %} <q>{{ o.get('quote') }}</q>{% endif %}</li>{% endfor %}</ul>{% endif %}
+{% if it.quotes %}<details><summary>{{ t('adv.quotes') }}</summary><ul class="plain">{% for q in it.quotes %}<li><code>{{ q.get('signal_id') }}</code> <q>{{ q.get('quote') }}</q></li>{% endfor %}</ul></details>{% endif %}
+{% endif %}
+</div>
+{% endfor %}
+</div>
+<p class="muted small">{{ report.advisory.disclaimer }}</p>
+</section>
+{% endif %}
+
+{% if interactive and is_final %}
+<section aria-labelledby="qa-h" id="qa">
+<h2 id="qa-h">{{ t('qa.title') }}</h2>
+<p class="muted">{{ t('qa.note') }}</p>
+<form data-qa-form data-audit-id="{{ a.id }}" data-lang="{{ lang }}" data-msg-thinking="{{ t('qa.thinking') }}" data-msg-error="{{ t('qa.error') }}" data-msg-oos="{{ t('qa.out_of_scope') }}" data-msg-citations="{{ t('qa.citations') }}">
+<label for="qa-q" class="sr">{{ t('qa.title') }}</label>
+<input id="qa-q" type="text" maxlength="500" required placeholder="{{ t('qa.ph') }}">
+<p><button type="submit">{{ t('qa.submit') }}</button></p>
+</form>
+<div id="qa-out" aria-live="polite"></div>
+</section>
+{% endif %}
+
+<section aria-labelledby="meth-h">
+<h2 id="meth-h">{{ t('meth.title') }}</h2>
+<ul class="plain">{% for n in report.methodology.notes %}<li>{{ n }}</li>{% endfor %}</ul>
+<h3>{{ t('meth.sources') }}</h3>
+<div class="tablewrap"><table><thead><tr><th scope="col">{{ t('meth.sources') }}</th><th scope="col">{{ t('home.col.status') }}</th></tr></thead><tbody>
+{% for d in report.data_sources %}<tr><th scope="row">{{ d.label }}</th><td>{{ t('src.' ~ d.status) }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if report.limitations %}<h3>{{ t('meth.limits') }}</h3><ul class="plain">{% for l in report.limitations %}<li>{{ l.message }}</li>{% endfor %}</ul>{% endif %}
+{% if report.not_checked %}
+<h3>{{ t('meth.notchecked.title') }} ({{ report.not_checked|length }})</h3>
+<div class="tablewrap"><table><thead><tr><th scope="col">{{ t('find.title') }}</th><th scope="col">{{ t('meth.notchecked.title') }}</th></tr></thead><tbody>
+{% for n in report.not_checked %}<tr><td><code>{{ n.check_id }}</code>{% if n.url %}<br><span class="muted small">{{ n.url }}</span>{% endif %}</td><td>{{ n.reason }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if report.pages %}
+<h3>{{ t('meth.pages') }}</h3>
+<div class="tablewrap"><table><thead><tr><th scope="col">{{ t('meth.col.url') }}</th><th scope="col">{{ t('meth.col.status') }}</th><th scope="col">{{ t('meth.col.role') }}</th><th scope="col">{{ t('meth.col.score') }}</th></tr></thead><tbody>
+{% for p in report.pages %}<tr><td><code>{{ p.url }}</code></td><td>{{ p.status if p.status is not none else '—' }}</td><td>{{ t('role.' ~ p.role) }}</td><td>{{ p.page_score|num }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if interactive %}<script src="/static/app.js" defer></script>{% endif %}{% endblock %}

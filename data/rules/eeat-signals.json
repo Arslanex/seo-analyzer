@@ -1,0 +1,42 @@
+{
+  "_doc": "E-E-A-T signal catalog (belge 03 s.5). assessor: llm | det | det+llm | na. 'claim' signals measure what the page CLAIMS, not whether it is true. Weights are this product's internal model, not Google's.",
+  "rubric_version": "eeat-1.0",
+  "weights": {"experience": 20, "expertise": 25, "authoritativeness": 25, "trustworthiness": 30},
+  "bands": {"strong": 90, "moderate": 65, "weak": 35, "none": 10},
+  "thresholds": {"strong": 0.67, "moderate": 0.34},
+  "label_bands": [[90, "exceptional"], [70, "strong"], [50, "moderate"], [30, "weak"], [0, "very_low"]],
+  "min_assessable": 2,
+  "min_coverage_for_score": 50,
+  "signals": [
+    {"id": "E1", "factor": "experience", "assessor": "llm", "fields": ["main_text", "byline"], "claim": false, "definition": "The author describes first-hand experience with the topic (first-person narrative: 'I tested', 'we built', concrete process they went through)."},
+    {"id": "E2", "factor": "experience", "assessor": "llm", "fields": ["main_text"], "claim": false, "definition": "The text states or captions original material (own photos, screenshots, data, measurements). Images themselves are not visible; judge only the text."},
+    {"id": "E3", "factor": "experience", "assessor": "llm", "fields": ["main_text"], "claim": false, "definition": "A concrete case study or real example with specific details (names, numbers, dates, outcomes)."},
+    {"id": "E4", "factor": "experience", "assessor": "llm", "fields": ["main_text"], "claim": false, "definition": "The process or methodology used is described step by step."},
+    {"id": "E5", "factor": "experience", "assessor": "llm", "fields": ["main_text"], "claim": false, "definition": "Before/after results or outcome data are given."},
+    {"id": "E6", "factor": "experience", "assessor": "llm", "fields": ["main_text"], "claim": false, "definition": "A specific anecdote that would be hard to invent. A quote already used for E1 must not be reused here."},
+    {"id": "X1", "factor": "expertise", "assessor": "llm", "fields": ["byline", "main_text"], "claim": false, "definition": "Author credentials relevant to the topic are stated (bio, role, certification, years of practice)."},
+    {"id": "X3", "factor": "expertise", "assessor": "det+llm", "fields": ["main_text"], "claim": false, "definition": "Claims, statistics or figures are supported by a named source or evidence."},
+    {"id": "X5", "factor": "expertise", "assessor": "det", "fields": ["facts"], "claim": false, "definition": "The page shows a publication/modification date that is recent (within 24 months)."},
+    {"id": "X6", "factor": "expertise", "assessor": "det+llm", "fields": ["byline"], "claim": false, "definition": "An author name/byline is visible."},
+    {"id": "A4", "factor": "authoritativeness", "assessor": "llm", "fields": ["main_text", "chrome_link"], "claim": true, "definition": "The page CLAIMS awards, certifications or accreditations."},
+    {"id": "A6", "factor": "authoritativeness", "assessor": "llm", "fields": ["main_text", "chrome_link"], "claim": true, "definition": "The page CLAIMS media coverage or publication in recognised outlets ('as featured in')."},
+    {"id": "A7", "factor": "authoritativeness", "assessor": "llm", "fields": ["main_text", "byline"], "claim": true, "definition": "The page CLAIMS professional memberships or affiliations."},
+    {"id": "T1", "factor": "trustworthiness", "assessor": "det+llm", "fields": ["chrome_link", "main_text"], "claim": false, "definition": "Clear contact information (address, phone, e-mail, or a contact page link)."},
+    {"id": "T2", "factor": "trustworthiness", "assessor": "llm", "fields": ["chrome_link"], "claim": false, "definition": "A privacy policy and/or terms of use link exists (any language; e.g. 'Gizlilik Politikasi', 'KVKK', 'Terms')."},
+    {"id": "T3", "factor": "trustworthiness", "assessor": "det", "fields": ["facts"], "claim": false, "definition": "The page is served over HTTPS with a valid certificate."},
+    {"id": "T4", "factor": "trustworthiness", "assessor": "llm", "fields": ["chrome_link", "byline", "main_text"], "claim": false, "definition": "It is transparent who creates the content and why (an 'About' link, byline, or an explanation of the organisation)."},
+    {"id": "T5", "factor": "trustworthiness", "assessor": "llm", "fields": ["main_text", "chrome_link"], "claim": false, "definition": "Customer reviews or testimonials are present (their existence, not their truth)."},
+    {"id": "T6", "factor": "trustworthiness", "assessor": "det+llm", "fields": ["main_text", "facts"], "claim": false, "definition": "A visible update history or 'last updated' note, or a corrections policy."},
+    {"id": "T9", "factor": "trustworthiness", "assessor": "llm", "fields": ["chrome_link"], "claim": false, "applies_to": ["product"], "definition": "A return/refund policy link is visible (e-commerce pages only)."}
+  ],
+  "not_assessed": [
+    {"id": "X2", "factor": "expertise", "reason": "factual accuracy cannot be verified from the page"},
+    {"id": "X4", "factor": "expertise", "reason": "correct use of specialist vocabulary cannot be verified from the page"},
+    {"id": "A1", "factor": "authoritativeness", "reason": "needs external recognition data"},
+    {"id": "A2", "factor": "authoritativeness", "reason": "needs external recognition data"},
+    {"id": "A3", "factor": "authoritativeness", "reason": "needs backlink/citation data"},
+    {"id": "A5", "factor": "authoritativeness", "reason": "publication history needs more than one page"},
+    {"id": "T7", "factor": "trustworthiness", "reason": "deceptive practices need judgement; not measured"},
+    {"id": "T8", "factor": "trustworthiness", "reason": "payment security cannot be verified from the page"}
+  ]
+}

@@ -1,0 +1,11 @@
+{# One-look summary: assembled from the other sections, shows no new data. #}
+<section id="sec-glance" aria-labelledby="glance-h">
+<h2 id="glance-h">{{ t('sec.glance') }}</h2>
+{% set G = report.glance %}
+{% if G.items %}
+<div class="grid cols4">
+{% for it in G.items %}<div class="card stat"><div class="num sm">{{ it.value }}</div><div class="muted small">{{ it.label }}</div></div>{% endfor %}
+</div>
+<p class="muted small">{{ t('glance.note') }}</p>
+{% endif %}
+</section>

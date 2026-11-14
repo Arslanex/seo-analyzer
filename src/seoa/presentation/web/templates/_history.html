@@ -1,0 +1,59 @@
+{# History and competitor sections (belge 12 C1/C2). Every value from a page is autoescaped. #}
+{% macro hnm(sec) %}
+<div class="card nm"><div class="big">— {{ t('cats.notmeasured') }}</div><p class="small">{{ sec.not_measured_text }}</p></div>
+{% endmacro %}
+{% macro chg(rows, title) %}
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ title }}</caption><thead><tr><th scope="col">{{ t('hist.col.what') }}</th><th scope="col">{{ t('hist.col.old') }}</th><th scope="col">{{ t('hist.col.new') }}</th><th scope="col">{{ t('hist.col.delta') }}</th></tr></thead><tbody>
+{% for r in rows %}<tr><th scope="row">{{ r.label }}</th><td>{{ r.old }}</td><td>{{ r.new }}</td><td class="delta d-{{ r.direction }}">{{ r.delta }}{% if r.direction in ('better', 'worse') %} <span class="small">({{ t('hist.dir.' ~ r.direction) }})</span>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endmacro %}
+{% macro flist(rows, title) %}
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ title }}</caption><thead><tr><th scope="col">{{ t('hist.col.severity') }}</th><th scope="col">{{ t('hist.col.finding') }}</th><th scope="col">URL</th></tr></thead><tbody>
+{% for f in rows %}<tr><td>{{ t('sev.' ~ f.severity) }}</td><th scope="row">{{ f.title }}</th><td class="u">{{ f.url or '—' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endmacro %}
+
+{% if only is none or only == 'sec-history' %}
+<section id="sec-history" aria-labelledby="history-h">
+<h2 id="history-h">{{ t('sec.history') }}</h2>
+{% set S = report.history %}
+{% if S.status == 'not_measured' %}{{ hnm(S) }}{% else %}
+<p class="muted small">{{ S.note }}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('sec.history') }}</caption><thead><tr><th scope="col">{{ t('hist.col.date') }}</th><th scope="col">{{ t('hist.col.mode') }}</th><th scope="col">{{ t('hist.col.status') }}</th><th scope="col">{{ t('hist.col.score') }}</th><th scope="col">{{ t('hist.col.coverage') }}</th></tr></thead><tbody>
+{% for r in S.rows %}<tr{% if r.is_current %} class="you"{% endif %}><th scope="row">{% if r.is_current %}{{ fmt_dt(r.created_at) }} <span class="small">({{ t('hist.current') }})</span>{% else %}<a href="{{ r.href }}?lang={{ lang }}">{{ fmt_dt(r.created_at) }}</a>{% endif %}</th><td>{{ t('mode.' ~ r.mode) }}</td><td>{{ t('status.' ~ r.status) }}</td><td>{{ r.overall|num if r.overall is not none else '—' }}</td><td>{{ (r.coverage_pct|num ~ ' %') if r.coverage_pct is not none else '—' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if S.truncated %}<p class="muted small">{{ t('hist.truncated', n=S.rows|length, m=S.rows_total) }}</p>{% endif %}
+{% if S.previous_id %}
+<h3>{{ t('hist.vs') }} <a href="{{ S.previous_href }}?lang={{ lang }}">{{ fmt_dt(S.previous_at) }}</a></h3>
+{% if S.warning_text %}<div class="banner info" role="status">{{ S.warning_text }}</div>{% endif %}
+{% if S.scores %}{{ chg(S.scores, t('hist.scores')) }}{% endif %}
+{% if S.metrics %}<h3>{{ t('hist.metrics') }}</h3><p class="muted small">{{ t('hist.metrics.note') }}</p>{{ chg(S.metrics, t('hist.metrics')) }}{% endif %}
+<p><strong>{{ t('hist.counts', new=S.new_total, resolved=S.resolved_total, same=S.persisting) }}</strong></p>
+{% if S.new_findings %}<h3>{{ t('hist.new') }}</h3>{{ flist(S.new_findings, t('hist.new')) }}{% if S.new_total > S.new_findings|length %}<p class="muted small">{{ t('hist.truncated', n=S.new_findings|length, m=S.new_total) }}</p>{% endif %}{% endif %}
+{% if S.resolved_findings %}<h3>{{ t('hist.resolved') }}</h3>{{ flist(S.resolved_findings, t('hist.resolved')) }}{% if S.resolved_total > S.resolved_findings|length %}<p class="muted small">{{ t('hist.truncated', n=S.resolved_findings|length, m=S.resolved_total) }}</p>{% endif %}{% endif %}
+{% else %}
+<p class="muted">{{ t('hist.no-previous') }}</p>
+{% endif %}
+{% endif %}
+{% if interactive and is_final and a.status.value != 'failed' %}
+<p><button type="button" class="secondary" data-action-post="/v1/audits/{{ a.id }}/rerun" data-modules="all">{{ t('report.rescan') }}</button> <span class="muted small">{{ t('report.rescan.hint') }}</span></p>
+{% endif %}
+</section>
+{% endif %}
+
+{% if only is none or only == 'sec-competitors' %}
+<section id="sec-competitors" aria-labelledby="comp-h">
+<h2 id="comp-h">{{ t('sec.competitors') }}</h2>
+{% set S = report.competitors %}
+{% if S.status == 'not_measured' %}{{ hnm(S) }}{% else %}
+<p class="muted small">{{ S.note }}</p>
+<div class="tablewrap"><table class="dense compare"><caption class="sr">{{ t('sec.competitors') }}</caption>
+<thead><tr><th scope="col">{{ t('comp.col.metric') }}</th>{% for c in S.columns %}<th scope="col"{% if c.is_you %} class="you"{% endif %}>{{ c.host }}{% if c.is_you %} <span class="small">({{ t('comp.you') }})</span>{% endif %}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for m in S.metrics %}{% set mi = loop.index0 %}<tr><th scope="row">{{ m }}</th>{% for c in S.columns %}<td{% if c.is_you %} class="you"{% endif %}>{{ c.values[mi] }}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div>
+{% for c in S.columns %}{% if c.note %}<p class="muted small">{{ c.host }}: {{ c.note }}</p>{% endif %}{% endfor %}
+{% if S.skipped %}<h3>{{ t('comp.skipped') }}</h3><ul class="plain">{% for k in S.skipped %}<li class="u"><code>{{ k.label }}</code> — {{ k.value }}</li>{% endfor %}</ul>{% endif %}
+{% endif %}
+</section>
+{% endif %}

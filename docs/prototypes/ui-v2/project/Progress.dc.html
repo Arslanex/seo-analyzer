@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Analiz sürüyor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAFAF9;--surface:#FFFFFF;--ink:#16181D;--muted:#5B6270;--line:#E7E8EB;--accent:#0F766E;--accent-soft:#E6F4F1;--good:#166534;--good-bg:#E3F4E8}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:#FAFAF9;color:#16181D}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spin{animation:none!important}}
+</style>
+</helmet>
+<div style="min-height: 820px; background: var(--bg); display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; color: var(--ink)">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 40px">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-weight: 600; font-size: 15px">
+<span style="width: 28px; height: 28px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>
+</span>
+SEO Analyzer
+</a>
+<a href="Main.dc.html" style="font-size: 14px; font-weight: 500; text-decoration: none; color: var(--muted)">İptal et</a>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 56px 24px 48px">
+<div style="width: 100%; max-width: 920px; display: flex; flex-direction: column; gap: 24px">
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 14px; color: var(--muted)">getlastcheck.com · Tüm site</div>
+<h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.02em">{{headline}}</h1>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 20px">
+
+<div style="flex: 0 0 340px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 40px 24px; border-right: 1px solid var(--line)">
+<div style="position: relative; width: 240px; height: 240px">
+<svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Yüzde {{pct}}">
+<circle cx="120" cy="120" r="104" fill="none" stroke="#E7E8EB" stroke-width="14"/>
+<circle cx="120" cy="120" r="104" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="653.45" transform="rotate(-90 120 120)" style="stroke-dashoffset: {{ring.offset}}; stroke: {{ring.color}}; transition: stroke-dashoffset 0.14s linear, stroke 0.4s"/>
+</svg>
+<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+<div style="display: flex; align-items: baseline; gap: 2px">
+<span style="font-size: 64px; line-height: 1; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums">{{pct}}</span>
+<span style="font-size: 26px; font-weight: 500; color: var(--muted)">%</span>
+</div>
+<span style="padding-top: 8px; font-size: 13px; font-weight: 500; color: var(--muted)">{{ringLabel}}</span>
+</div>
+</div>
+<sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+<a href="Overview.dc.html" style="display: flex; align-items: center; justify-content: center; height: 44px; padding: 0 28px; font-size: 15px; font-weight: 600; text-decoration: none; color: #FFFFFF; background: var(--accent); border-radius: 12px">Raporu aç</a>
+</sc-if>
+</div>
+
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column">
+
+<div style="padding: 28px 32px; border-bottom: 1px solid var(--line); min-height: 112px; display: flex; flex-direction: column; justify-content: center; gap: 6px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent)">{{nowLabel}}</div>
+<div aria-live="polite" style="font-size: 22px; line-height: 1.35; font-weight: 500; opacity: {{msg.opacity}}; transform: translateY({{msg.shift}}px); transition: opacity 0.25s, transform 0.25s">{{msg.text}}</div>
+</div>
+
+<ol style="margin: 0; padding: 20px 32px 24px; list-style: none; display: flex; flex-direction: column; gap: 4px">
+<sc-for list="{{stages}}" as="stage" hint-placeholder-count="8">
+<li style="display: flex; align-items: center; gap: 14px; padding: 7px 0; font-size: 15px; color: {{stage.color}}; font-weight: {{stage.weight}}">
+<span style="flex: 0 0 22px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{stage.isDone}}" hint-placeholder-val="{{ true }}">
+<span style="width: 22px; height: 22px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+</sc-if>
+<sc-if value="{{stage.isNow}}" hint-placeholder-val="{{ false }}">
+<span class="spin" style="width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%; border: 3px solid #E6F4F1; border-top-color: #0F766E; animation: spin 0.9s linear infinite"></span>
+</sc-if>
+<sc-if value="{{stage.isTodo}}" hint-placeholder-val="{{ false }}">
+<span style="width: 14px; height: 14px; box-sizing: border-box; border-radius: 50%; border: 2px solid #C9CCD3"></span>
+</sc-if>
+</span>
+<span>{{stage.label}}</span>
+</li>
+</sc-for>
+</ol>
+
+</div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted)">Sayfayı kapatsanız da denetim arka planda sürer. Ana sayfadaki “Son denetimler” listesinden açabilirsiniz.</p>
+<sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{replay}}" style="height: 36px; padding: 0 14px; font: 500 13px Inter, system-ui, sans-serif; color: var(--muted); background: transparent; border: 1px solid #C9CCD3; border-radius: 8px; cursor: pointer">Yeniden oynat</button>
+</sc-if>
+</div>
+
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"start":{"editor":"int","default":38,"min":0,"max":99,"section":"İlerleme","tsType":"number"},"$preview":{"width":1440,"height":820}}'>
+const STAGES = [
+  { label: 'Adres doğrulanıyor', from: 0, msgs: ['Adres biçimi kontrol ediliyor…', 'Adresin güvenli olduğu doğrulanıyor…'] },
+  { label: 'Ana sayfa alınıyor, robots.txt okunuyor', from: 8, msgs: ['Ana sayfa indiriliyor…', 'robots.txt kuralları okunuyor…'] },
+  { label: 'Sayfalar keşfediliyor ve seçiliyor', from: 18, msgs: ['Sitemap’teki sayfalar bulunuyor…', 'İncelenecek sayfalar seçiliyor…'] },
+  { label: 'Sayfalar alınıyor, tarayıcıda çiziliyor', from: 32, msgs: ['Sayfalar indiriliyor…', 'Sayfa tarayıcıda çizilip hızı ölçülüyor…'] },
+  { label: 'Kontroller çalışıyor', from: 52, msgs: ['Başlık ve açıklama uzunluğu kontrol ediliyor…', 'Kırık bağlantılar aranıyor…', 'Görsellerin boyutu ölçülüyor…'] },
+  { label: 'Skor hesaplanıyor', from: 68, msgs: ['Bulgular şiddetine göre tartılıyor…', 'Kategori skorları hesaplanıyor…'] },
+  { label: 'Yapay zekâ yorumu ve özet', from: 80, msgs: ['Yapay zekâ bulguları yorumluyor…', 'Özet ve öneriler yazılıyor…'] },
+  { label: 'Rapor derleniyor', from: 92, msgs: ['Rapor derleniyor…'] }
+];
+const CIRC = 653.45;
+const STEP_MS = 140;
+const TICKS_PER_MSG = 13;
+
+class Component extends DCLogic {
+  componentDidMount() {
+    this.begin();
+  }
+  componentWillUnmount() {
+    clearInterval(this.timer);
+  }
+  begin() {
+    clearInterval(this.timer);
+    const start = this.props.start ?? 38;
+    this.setState({ pct: start, tick: 0 });
+    this.timer = setInterval(() => {
+      const next = Math.min(100, (this.state.pct ?? start) + 1);
+      this.setState({ pct: next, tick: (this.state.tick || 0) + 1 });
+      if (next >= 100) clearInterval(this.timer);
+    }, STEP_MS);
+  }
+  renderVals() {
+    const pct = this.state.pct ?? this.props.start ?? 38;
+    const tick = this.state.tick || 0;
+    const done = pct >= 100;
+    let now = 0;
+    STAGES.forEach((s, i) => { if (pct >= s.from) now = i; });
+    const stages = STAGES.map((s, i) => {
+      const isDone = done || i < now;
+      const isNow = !done && i === now;
+      return {
+        label: s.label,
+        isDone,
+        isNow,
+        isTodo: !isDone && !isNow,
+        color: isNow ? '#16181D' : (isDone ? '#16181D' : '#5B6270'),
+        weight: isNow ? 600 : 400
+      };
+    });
+    const list = STAGES[now].msgs;
+    const text = done ? 'Rapor hazır. Skor, bulgular ve öneriler seni bekliyor.' : list[Math.floor(tick / TICKS_PER_MSG) % list.length];
+    const phase = tick % TICKS_PER_MSG;
+    const visible = done || phase > 1;
+    return {
+      pct,
+      done,
+      headline: done ? 'Analiz tamamlandı' : 'Siteniz analiz ediliyor',
+      ringLabel: done ? 'Hazır' : 'Analiz sürüyor',
+      nowLabel: done ? 'Bitti' : 'Şu an',
+      ring: { offset: CIRC * (1 - pct / 100), color: done ? '#166534' : '#0F766E' },
+      msg: { text, opacity: visible ? 1 : 0, shift: visible ? 0 : 6 },
+      stages,
+      replay: () => this.begin()
+    };
+  }
+}
+</script>
+</body>
+</html>

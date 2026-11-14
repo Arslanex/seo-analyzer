@@ -1,0 +1,52 @@
+{% extends 'app_base.html' %}
+{% from '_app_macros.html' import ico with context %}
+{% set a = report.audit %}
+{% block content %}
+<div class="chat-wrap">
+<div class="chat-head">
+<div class="left">
+<h1>{{ t('chat.title') }}</h1>
+<span class="pill pill-plain">{{ t('shell.audit_pill', host=host_of(a.requested_url), date=fmt_date(a.finished_at or a.started_at, false)) }}</span>
+</div>
+<a class="btn-line btn-sm" href="/audits/{{ a.id }}/chat?new=1&amp;lang={{ lang }}">{{ ico('plus', 14) }}{{ t('chat.new') }}</a>
+</div>
+
+<div class="chat-body">
+<div class="chat-log" id="chat-log" aria-live="polite">
+{% if not history %}<p class="chat-empty" id="chat-empty">{{ t('chat.empty') }}</p>{% endif %}
+{% for turn in history %}
+<div class="msg-u">{{ turn.question }}</div>
+<div class="msg-a">
+<span class="avatar" aria-hidden="true">{{ ico('check', 16) }}</span>
+<div class="content">
+<div class="txt">{% if turn.answer.get('out_of_scope') %}{{ t('qa.out_of_scope') }}{% else %}{{ turn.answer.get('answer', '') }}{% endif %}</div>
+{% set cites = turn.answer.get('citations') or [] %}
+{% if cites %}{% set seen = [] %}<div class="src"><span>{{ t('chat.sources') }}</span>{% for c in cites[:8] %}{% set fid = c.get('finding_id') %}{% set cm = cite_map.get(fid) if fid else none %}{% if cm %}{% if cm.label not in seen %}{% set _ = seen.append(cm.label) %}<a href="/audits/{{ a.id }}/analysis?tab={{ cm.tab }}&amp;lang={{ lang }}#{{ fid }}">{{ t('nav.analysis') }} › {{ cm.label }}</a>{% endif %}{% elif fid %}<a href="/audits/{{ a.id }}/report?lang={{ lang }}#{{ fid }}">{{ fid }}</a>{% elif c.get('score_ref') or c.get('url') %}<code>{{ c.get('score_ref') or c.get('url') }}</code>{% endif %}{% endfor %}</div>{% endif %}
+<div class="note">{{ t('chat.note') }}</div>
+</div>
+</div>
+{% endfor %}
+</div>
+<div class="suggest" id="chat-suggest"{% if history %} hidden{% endif %}>
+<div class="lbl">{{ t('chat.follow') }}</div>
+<div class="row">
+{% for q in suggestions %}<button type="button" data-q="{{ q }}">{{ q }}</button>{% endfor %}
+</div>
+</div>
+</div>
+
+<div class="composer-wrap">
+<form class="composer" data-chat-form data-audit-id="{{ a.id }}" data-lang="{{ lang }}"
+ data-msg-error="{{ t('qa.error') }}" data-msg-oos="{{ t('qa.out_of_scope') }}" data-msg-thinking="{{ t('qa.thinking') }}"
+ data-msg-sources="{{ t('chat.sources') }}" data-msg-note="{{ t('chat.note') }}" data-msg-analysis="{{ t('nav.analysis') }}" data-cites='{{ cite_map|tojson }}'>
+<div class="ctx"><span>{{ t('chat.context') }}</span><b>{{ t('chat.context.all') }}</b></div>
+<div class="in">
+<label for="chat-q" class="sr">{{ t('chat.ph') }}</label>
+<textarea id="chat-q" rows="2" maxlength="500" required placeholder="{{ t('chat.ph') }}">{{ prefill }}</textarea>
+<button type="submit" class="send" aria-label="{{ t('chat.send') }}">{{ ico('send') }}</button>
+</div>
+</form>
+<div class="warn">{{ t('chat.warn') }}</div>
+</div>
+</div>
+{% endblock %}

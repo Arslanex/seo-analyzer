@@ -1,0 +1,48 @@
+{% extends 'app_base.html' %}
+{% from '_app_macros.html' import ico with context %}
+{% block head %}<noscript><meta http-equiv="refresh" content="4"></noscript>{% endblock %}
+{% block content %}
+<div class="topbar">
+<a href="/?lang={{ lang }}" style="color:var(--ap-ink)!important;font-weight:600"><span class="logo">{{ ico('check', 16) }}</span>{{ t('app.name') }}</a>
+<button type="button" class="linkbtn" data-cancel="/v1/audits/{{ audit_id }}/cancel">{{ t('prog.cancel') }}</button>
+</div>
+
+<div class="prog-wrap">
+<div class="prog-in">
+<div>
+<div class="muted" style="font-size:.88rem">{{ audit_url }} · {{ t('mode.' ~ audit_mode) }}</div>
+<h1 id="pheadline" style="margin-top:6px;font-size:1.9rem">{{ t('prog.headline') }}</h1>
+</div>
+
+<div class="prog-card" data-progress data-audit-id="{{ audit_id }}" data-lang="{{ lang }}" data-msg-done="{{ t('progress.done') }}" data-msg-headline-done="{{ t('prog.headline.done') }}" data-msg-ring-done="{{ t('prog.ring.done') }}" data-msg-finished="{{ t('prog.finished') }}" data-msg-ready="{{ t('prog.ready') }}">
+<div class="prog-left">
+<div class="ring" id="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="{{ t('prog.ring') }}">
+<svg width="240" height="240" viewBox="0 0 240 240" aria-hidden="true" focusable="false">
+<circle class="track" cx="120" cy="120" r="104" fill="none" stroke-width="14"/>
+<circle class="fill" id="pring" cx="120" cy="120" r="104" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="653.45" stroke-dashoffset="653.45" transform="rotate(-90 120 120)"/>
+</svg>
+<div class="num"><div><b id="ppct">0</b><span>%</span></div><small id="plabel">{{ t('prog.ring') }}</small></div>
+</div>
+<a class="btn-accent" id="popen" href="/audits/{{ audit_id }}?lang={{ lang }}" hidden>{{ t('prog.open') }}</a>
+</div>
+<div class="prog-right">
+<div class="now">
+<div class="eyebrow" id="pnow">{{ t('prog.now') }}</div>
+<div class="msg" id="pmsg" aria-live="polite">{{ t('progress.waiting') }}</div>
+</div>
+<ol class="steps" id="plist">
+{% for g in groups|default([]) %}<li data-group="{{ g.id }}" data-from="{{ g.start }}"><span class="mark" aria-hidden="true"></span><span>{{ g.label }}</span></li>
+{% endfor %}</ol>
+</div>
+</div>
+<p class="muted" style="margin:0;font-size:.88rem;line-height:1.5">{{ t('prog.bg') }}</p>
+</div>
+</div>
+
+<div id="pmsgs" hidden>
+{% for g in groups|default([]) %}<ul data-group="{{ g.id }}" data-stages="{{ g.stages|join(' ') }}">{% for m in g.messages %}<li>{{ m }}</li>{% endfor %}</ul>
+{% endfor %}</div>
+<ul id="stage-names" hidden>
+{% for st in stages %}<li data-stage="{{ st }}">{{ t('stage.' ~ st) }}</li>
+{% endfor %}</ul>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'app_base.html' %}
+{% from '_app_macros.html' import ico with context %}
+{% from '_macros.html' import sev_badge with context %}
+{% set a = report.audit %}
+{% set ov = report.scores.overall %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>{{ t('ov.title') }}</h1>
+<p>{{ t('ov.sub', host=host_of(a.requested_url), mode=t('mode.' ~ a.mode.value), date=fmt_date(a.finished_at or a.started_at), conf=t('conf.' ~ ov.confidence)) }} · <a href="/audits/{{ a.id }}/report?lang={{ lang }}" style="color:inherit">{{ t('shell.full_report') }}</a></p>
+</div>
+<div class="head-actions">
+{% if a.status.value != 'failed' %}<a class="btn-soft" href="/audits/{{ a.id }}/chat?lang={{ lang }}">{{ ico('chat', 16) }}{{ t('ov.ask') }}</a>
+<button type="button" class="btn-accent" data-action-post="/v1/audits/{{ a.id }}/rerun" data-modules="checks">{{ t('ov.rerun') }}</button>{% endif %}
+</div>
+</div>
+
+{% if a.status.value == 'failed' %}
+<div class="banner2 fail" role="alert"><strong>{{ t('ov.failed') }}.</strong> {{ a.error_text or t('report.failed.none') }}</div>
+{% else %}
+
+{% if a.status.value == 'partial' %}<div class="banner2" role="status">{{ t('report.partial', reason=(report.limitations[0].message if report.limitations else t('reason.partial-sample'))) }}</div>
+{% elif a.status.value == 'canceled' %}<div class="banner2" role="status">{{ t('report.canceled') }}</div>{% endif %}
+{% if ov.gate %}<div class="banner2" role="status"><strong>{{ t('gate.title') }}:</strong> {% if ov.raw_value is not none %}{{ t('gate.text', reason=ov.gate.message, raw=ov.raw_value|nl, cap=ov.gate.cap) }}{% else %}{{ t('gate.text.noraw', reason=ov.gate.message, cap=ov.gate.cap) }}{% endif %}</div>{% endif %}
+
+<section class="card2 score-card" aria-label="{{ t('score.health') if report.scores.kind == 'health' else t('score.page') }}">
+{% if ov.display == 'number' %}
+<div>
+<div class="score-big"><b title="{{ ov.value|nl }}">{{ ov.value|round|int }}</b><span>/ 100</span></div>
+<div style="padding-top:10px"><span class="pill pill-{{ ov.band }}">{{ t('ov.band.' ~ ov.band) }}</span> <span class="muted" style="font-size:.8rem">{{ t('score.health') if report.scores.kind == 'health' else t('score.page') }}</span></div>
+</div>
+{% else %}
+<div><div style="font-size:1.4rem;font-weight:600">{{ t('score.insufficient') }}</div><p class="muted" style="font-size:.85rem">{{ t('score.insufficient.text', coverage=ov.coverage_pct|nl) }}</p></div>
+{% endif %}
+<div class="stat-grid">
+{% for it in stats %}<div><b>{{ it.value }}</b><span>{{ it.label }}</span></div>{% endfor %}
+</div>
+<p class="score-note">{{ t('ov.score_note') }}</p>
+{% if report.scope_note %}
+<details class="score-more">
+<summary>{{ report.scope_note.title }}</summary>
+<p>{{ report.scope_note.intro }}</p>
+<ul>{% for it in report.scope_note.items %}<li>{{ it }}</li>{% endfor %}</ul>
+<p>{{ report.scope_note.next_step }}</p>
+</details>
+{% endif %}
+</section>
+
+{% if report.summary.top_finding_ids %}
+<section class="sect" aria-labelledby="ov-first">
+<h2 id="ov-first">{{ t('ov.first') }}</h2>
+<div class="card2 rows">
+{% for fid in report.summary.top_finding_ids[:3] %}{% set f = report.finding(fid) %}
+<div>
+{{ sev_badge(f.severity.value, t, severity_shape) }}
+<div class="grow"><div class="t">{{ f.message|truncate(120) }}</div>{% if f.evidence %}<div class="s">{{ f.evidence.value|truncate(150) }}</div>{% endif %}</div>
+<a class="btn-line btn-sm" href="/audits/{{ a.id }}/chat?finding={{ f.id }}&amp;lang={{ lang }}">{{ t('an.ask') }}</a>
+</div>
+{% endfor %}
+</div>
+<a href="/audits/{{ a.id }}/analysis?lang={{ lang }}" style="font-size:.88rem;font-weight:500;text-decoration:none">{{ t('ov.all_findings') }}</a>
+</section>
+{% else %}
+<p class="muted">{{ t('ov.no_findings') }}</p>
+{% endif %}
+
+<section class="sect" aria-labelledby="ov-cats">
+<h2 id="ov-cats">{{ t('ov.cats') }}</h2>
+<div class="cat-grid">
+{% for c in cats %}
+{% if c.status == 'not_measured' %}
+<a class="cat" href="/audits/{{ a.id }}/analysis?tab={{ c.id.value }}&amp;lang={{ lang }}"><div class="top"><b>{{ t('tab.' ~ c.id.value) }}</b></div><div class="cnm">— {{ t('cats.notmeasured') }}</div></a>
+{% else %}
+{% set band = 'good' if c.score >= 90 else ('attention' if c.score >= 75 else 'poor') %}
+<a class="cat{% if band == 'poor' %} poor{% endif %}" href="/audits/{{ a.id }}/analysis?tab={{ c.id.value }}&amp;lang={{ lang }}">
+<div class="top"><b>{{ t('tab.' ~ c.id.value) }}</b><i class="c-{{ band }}">{{ t('ov.band.' ~ band) }}</i></div>
+<div class="n">{{ c.score|nl }}</div>
+<div class="bar2 {{ band }}" role="img" aria-label="{{ t('tab.' ~ c.id.value) }}: {{ c.score|nl }} / 100"><span style="width:{{ c.score }}%"></span></div>
+{% if c.checks_total %}<div class="meta">{{ t('ov.checks', n=c.checks_passed, m=c.checks_total) }}</div>{% endif %}
+</a>
+{% endif %}
+{% endfor %}
+</div>
+</section>
+
+{% if report.synthesis and report.synthesis.summary %}
+<section class="card2 ai-card" aria-labelledby="ov-ai">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 id="ov-ai">{{ t('ov.ai') }}</h2><span class="pill pill-plain">{{ t('ov.ai.badge') }}</span></div>
+<p>{{ report.synthesis.summary }}</p>
+<a href="/audits/{{ a.id }}/chat?lang={{ lang }}" style="font-size:.88rem;font-weight:600;text-decoration:none">{{ t('ov.continue_chat') }}</a>
+</section>
+{% endif %}
+
+{% endif %}
+{% endblock %}

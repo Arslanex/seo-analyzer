@@ -1,0 +1,51 @@
+{% from '_app_macros.html' import ico with context %}
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<title>{{ title }}</title>
+<style>{{ severity_css }}{% include 'style.css' %}{% include 'app.css' %}</style>
+{% block head %}{% endblock %}
+</head>
+<body class="page-app page-{{ page }}">
+<a class="skip" href="#main">{{ t('nav.skip') }}</a>
+<div class="app{% if not show_side %} no-side{% endif %}">
+{% if show_side %}
+{% set A = nav_audit %}
+{% set q = '?lang=' ~ lang %}
+<aside class="side">
+<a class="brand2" href="/{{ q }}"><span class="logo">{{ ico('check', 16) }}</span>{{ t('app.name') }}</a>
+{% if A %}
+<div class="site-card"><div class="site-host">{{ A.host }}</div><div class="site-meta">{{ t('mode.' ~ A.mode) }}{% if A.score is not none %} · {{ A.score|round|int }} / 100{% endif %}</div></div>
+<button type="button" class="mrerun" data-action-post="/v1/audits/{{ A.id }}/rerun" data-modules="checks">{{ t('ov.rerun') }}</button>
+{% endif %}
+<a class="newbtn" href="/{{ q }}">{{ ico('plus', 16) }}<span>{{ t('shell.new') }}</span></a>
+<nav class="navlist" aria-label="{{ t('shell.menu') }}">
+{% if A %}
+<a class="nav-overview" href="/audits/{{ A.id }}{{ q }}"{% if nav_active == 'overview' %} aria-current="page"{% endif %}>{{ ico('overview') }}<span class="lbl-l">{{ t('nav.overview') }}</span><span class="lbl-s">{{ t('nav.overview.short') }}</span></a>
+<a class="nav-chat" href="/audits/{{ A.id }}/chat{{ q }}"{% if nav_active == 'chat' %} aria-current="page"{% endif %}>{{ ico('chat') }}<span>{{ t('nav.chat') }}</span></a>
+<a class="nav-analysis" href="/audits/{{ A.id }}/analysis{{ q }}"{% if nav_active == 'analysis' %} aria-current="page"{% endif %}>{{ ico('analysis') }}<span>{{ t('nav.analysis') }}</span></a>
+<a class="nav-search" href="/audits/{{ A.id }}/search{{ q }}"{% if nav_active == 'search' %} aria-current="page"{% endif %}>{{ ico('search') }}<span>{{ t('nav.search') }}</span></a>
+<a class="nav-rivals" href="/audits/{{ A.id }}/rivals{{ q }}"{% if nav_active == 'rivals' %} aria-current="page"{% endif %}>{{ ico('rivals') }}<span>{{ t('nav.rivals') }}</span></a>
+<a class="nav-plan" href="/audits/{{ A.id }}/plan{{ q }}"{% if nav_active == 'plan' %} aria-current="page"{% endif %}>{{ ico('plan') }}<span class="lbl-l">{{ t('nav.plan') }}</span><span class="lbl-s">{{ t('nav.plan.short') }}</span></a>
+<a class="nav-history" href="/audits/{{ A.id }}/history{{ q }}"{% if nav_active == 'history' %} aria-current="page"{% endif %}>{{ ico('history') }}<span>{{ t('nav.history') }}</span></a>
+{% endif %}
+<a class="nav-settings" href="/settings{{ q }}{% if A %}&amp;audit={{ A.id }}{% endif %}"{% if nav_active == 'settings' %} aria-current="page"{% endif %}>{{ ico('settings') }}<span>{{ t('nav.settings') }}</span></a>
+</nav>
+<div class="side-foot">
+<span>{% if google_connected is not none %}<span class="dot{% if not google_connected %} off{% endif %}"></span>Google{% endif %}</span>
+<a href="{{ lang_url }}">{{ other_lang|upper }}</a>
+</div>
+</aside>
+{% endif %}
+<main id="main" class="main">
+{% block content %}{% endblock %}
+</main>
+{% if show_side and nav_audit and nav_active != 'chat' %}<a class="ask-pill" href="/audits/{{ nav_audit.id }}/chat?lang={{ lang }}">{{ ico('chat') }}<span>{{ t('mobile.ask') }}</span></a>{% endif %}
+</div>
+{% block scripts %}<script src="/static/app.js" defer></script>{% endblock %}
+</body>
+</html>

@@ -1,0 +1,72 @@
+[project]
+name = "seoa"
+version = "0.1.0"
+description = "SEO analyzer: safe fetch, deterministic checks, scored and evidenced reports, AI Q&A"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+keywords = ["seo", "audit", "core-web-vitals", "search-console", "fastapi"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: FastAPI",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Internet :: WWW/HTTP :: Site Management",
+]
+dependencies = [
+  "aiohttp>=3.9",
+  "aiosqlite>=0.20",
+  "anthropic>=2.8",
+  "beautifulsoup4>=4.12",
+  "fastapi>=0.115",
+  "jinja2>=3.1",
+  "lxml>=5.0",
+  "playwright>=1.48",
+  "pydantic>=2.7",
+  "python-dotenv>=1.0",
+  "trafilatura>=2.0",
+  "uvicorn>=0.30",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.27",
+  "lxml-stubs",
+  "mypy>=1.10",
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "ruff",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"seoa.presentation.web" = ["templates/*", "static/*"]
+"seoa.infrastructure.llm" = ["prompts/*"]
+
+[tool.ruff]
+extend-exclude = ["docs", "data", ".venv"]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src"]

@@ -1,0 +1,82 @@
+{% extends 'app_base.html' %}
+{% from '_app_macros.html' import ico with context %}
+{% block content %}
+<div class="topbar">
+<a href="/?lang={{ lang }}" style="color:var(--ap-ink)!important;font-weight:600"><span class="logo">{{ ico('check', 16) }}</span>{{ t('app.name') }}</a>
+<div style="display:flex;align-items:center;gap:18px">
+<a href="/?lang={{ other_lang }}">{{ other_lang|upper }}</a>
+<a href="/settings?lang={{ lang }}">{{ ico('settings') }}{{ t('nav.settings') }}</a>
+</div>
+</div>
+
+<div class="hero">
+<div class="hero-in">
+{% if error %}<div class="banner2 fail" role="alert">{{ t('home.error.' ~ error) }}</div>{% endif %}
+{% if google_msg %}<div class="banner2" role="status">{{ t('home.google.msg.' ~ google_msg) }}</div>{% endif %}
+<div>
+<h1>{{ t('home.hero') }}</h1>
+<p class="lead">{{ t('home.hero.lead') }}</p>
+</div>
+
+<form method="post" action="/ui/audits" aria-labelledby="f-title">
+<h2 id="f-title" class="sr">{{ t('home.submit') }}</h2>
+<label for="url">{{ t('home.url') }}</label>
+<div class="urlrow">
+<input id="url" name="url" type="text" inputmode="url" autocomplete="off" maxlength="2048" required placeholder="{{ t('home.url.ph') }}">
+<button type="submit" class="go">{{ t('home.analyze') }}</button>
+</div>
+<div class="seg" role="radiogroup" aria-label="{{ t('home.mode') }}">
+<label><input type="radio" name="mode" value="site" checked><span class="opt">{{ t('home.mode.site.short') }}</span></label>
+<label><input type="radio" name="mode" value="page"><span class="opt">{{ t('home.mode.page.short') }}</span></label>
+<span class="muted" style="font-size:.8rem">{{ t('home.mode.hint') }}</span>
+</div>
+<details{% if form_open %} open{% endif %}>
+<summary>{{ t('home.optional.title') }} <span class="muted" style="font-weight:400">{{ t('home.optional.hint') }}</span></summary>
+<label for="keywords" style="margin-top:14px">{{ t('home.keywords') }}</label>
+<textarea id="keywords" name="keywords" rows="2" maxlength="1200" placeholder="{{ t('home.keywords.ph') }}">{{ form_keywords or '' }}</textarea>
+<p class="muted" style="margin:4px 0 0;font-size:.8rem">{{ t('home.keywords.hint') }}</p>
+<p style="margin:8px 0 0"><button type="button" class="btn-line btn-sm" id="suggest-btn" data-lang="{{ lang }}">{{ t('home.suggest') }}</button></p>
+<p class="muted" id="suggest-msg" hidden style="margin:8px 0 0;font-size:.82rem" aria-live="polite"></p>
+<div class="chips2" id="suggest-chips" style="margin-top:8px" data-msg-impr="{{ t('home.suggest.impr', n='{n}') }}"></div>
+<label for="competitors" style="margin-top:14px">{{ t('home.competitors') }}</label>
+<textarea id="competitors" name="competitors" rows="3" maxlength="1200" placeholder="{{ t('home.competitors.ph') }}">{{ form_competitors or '' }}</textarea>
+<p class="muted" style="margin:4px 0 0;font-size:.8rem">{{ t('home.competitors.hint') }}</p>
+<p class="muted" id="profile-note" hidden style="margin:10px 0 0;font-size:.82rem">{{ t('home.profile.loaded') }}</p>
+<label class="check" style="margin-top:14px"><input type="checkbox" name="enable_llm" value="1" checked> {{ t('home.llm') }}</label>
+<label for="lang" style="margin-top:14px">{{ t('home.lang') }}</label>
+<select id="lang" name="lang">
+<option value="tr"{% if lang == 'tr' %} selected{% endif %}>Türkçe</option>
+<option value="en"{% if lang == 'en' %} selected{% endif %}>English</option>
+</select>
+</details>
+</form>
+
+<section class="recent" aria-labelledby="rc-h">
+<h2 id="rc-h">{{ t('home.recent.sites') }}</h2>
+{% if sites %}
+{% for a in sites %}
+<a class="rc" href="/audits/{{ a.id }}?lang={{ lang }}">
+<div class="grow"><div class="h">{{ host_of(a.target_url) }}</div><div class="s">{{ t('mode.' ~ a.mode.value) }} · {{ fmt_date(a.created_at, false) }}</div></div>
+{% if a.overall is not none %}<span class="pill pill-{{ 'good' if a.overall >= 90 else ('attention' if a.overall >= 75 else 'poor') }}">{{ a.overall|round|int }} / 100</span>{% endif %}
+{{ ico('chevron') }}
+</a>
+{% endfor %}
+{% else %}
+<p class="muted">{{ t('home.recent.empty') }}</p>
+{% endif %}
+</section>
+</div>
+</div>
+
+<div class="foot-status">
+{% if google is not none %}
+{% if google.connected %}<a href="/settings?lang={{ lang }}" style="color:var(--ap-good);background:var(--ap-good-bg)">{{ ico('check', 14) }}{{ t('home.chip.google') }}</a>
+{% else %}<a href="/settings?lang={{ lang }}" style="color:var(--ap-warn);background:var(--ap-warn-bg)">{{ ico('alert', 14) }}{{ t('home.chip.google.off') }}</a>{% endif %}
+{% endif %}
+{% if flags.ai %}<a href="/settings?lang={{ lang }}" style="color:var(--ap-good);background:var(--ap-good-bg)">{{ ico('check', 14) }}{{ t('home.chip.ai') }}</a>
+{% else %}<a href="/settings?lang={{ lang }}" style="color:var(--ap-warn);background:var(--ap-warn-bg)">{{ ico('alert', 14) }}{{ t('home.chip.ai.off') }}</a>{% endif %}
+{% if flags.opr %}<a href="/settings?lang={{ lang }}" style="color:var(--ap-good);background:var(--ap-good-bg)">{{ ico('check', 14) }}{{ t('home.chip.opr') }}</a>
+{% else %}<a href="/settings?lang={{ lang }}" style="color:var(--ap-warn);background:var(--ap-warn-bg)">{{ ico('alert', 14) }}{{ t('home.chip.opr.off') }}</a>{% endif %}
+<span class="muted" style="font-size:.8rem">{{ t('home.spend') }}: ${{ '%.4f'|format(spend.spent_usd) }} / ${{ '%.2f'|format(spend.cap_usd) }}</span>
+</div>
+{% endblock %}

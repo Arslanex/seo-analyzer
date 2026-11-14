@@ -1,0 +1,89 @@
+{% extends 'app_base.html' %}
+{% from '_app_macros.html' import ico with context %}
+{% from '_macros.html' import sev_icon, sev_badge, gauge with context %}
+{% set a = report.audit %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>{{ t('an.title') }}</h1>
+<p>{{ t('shell.audit_pill', host=host_of(a.requested_url), date=fmt_date(a.finished_at or a.started_at, false)) }}</p>
+</div>
+<div class="head-actions"><a class="btn-soft" href="/audits/{{ a.id }}/chat?lang={{ lang }}">{{ ico('chat', 16) }}{{ t('an.ask_page') }}</a></div>
+</div>
+
+<nav class="tabs" aria-label="{{ t('an.tabs') }}">
+{% for c in cats_ordered %}
+<a href="/audits/{{ a.id }}/analysis?tab={{ c.id.value }}&amp;lang={{ lang }}"{% if c.id.value == tab %} aria-current="page"{% endif %}>{{ t('tab.' ~ c.id.value) }}{% if c.finding_ids %}<span class="cnt">{{ c.finding_ids|length }}</span>{% endif %}</a>
+{% endfor %}
+</nav>
+
+{% if cat %}
+<section class="card2 cat-summary" aria-label="{{ t('tab.' ~ cat.id.value) }}">
+{% if cat.status == 'not_measured' %}
+<div><h2>{{ t('tab.' ~ cat.id.value) }}</h2><p class="muted" style="margin:6px 0 0;font-size:.9rem">{{ t('an.not_measured') }}. {{ cat.not_measured_text }}</p></div>
+{% else %}
+{% set band = 'good' if cat.score >= 90 else ('attention' if cat.score >= 75 else 'poor') %}
+<div style="display:flex;align-items:baseline;gap:6px"><span class="n">{{ cat.score|nl }}</span><span class="muted">/ 100</span></div>
+<span class="pill pill-{{ band }}">{{ t('ov.band.' ~ band) }}</span>
+<div class="muted" style="flex:1 1 280px;font-size:.88rem;line-height:1.5">{{ t('an.desc.' ~ cat.id.value) }} {% if cat.checks_total %}<strong style="color:var(--ap-ink);font-weight:600">{{ t('an.checks_found', n=cat.checks_passed, m=cat.checks_total) }}</strong>, {% endif %}{{ t('an.findings_n', n=findings|length) }}</div>
+{% endif %}
+</section>
+{% endif %}
+
+<section class="sect" aria-labelledby="an-find">
+<h2 id="an-find">{{ t('an.findings') }}</h2>
+{% if not findings %}<p class="muted">{{ t('an.none') }}</p>{% endif %}
+{% for f in findings %}
+<article class="card2 f2" id="{{ f.id }}">
+<div class="body">
+<div class="hd">{{ sev_badge(f.severity.value, t, severity_shape) }}<h3>{{ f.message }}</h3></div>
+{% if f.evidence %}<div class="evline">{{ t('an.evidence') }}: <code class="evi" dir="auto">{{ f.evidence.value }}</code></div>{% endif %}
+{% if f.heuristic %}<p class="muted" style="font-size:.8rem">{{ t('find.heuristic') }}</p>{% endif %}
+{% for rid in f.recommendation_ids[:1] %}{% set r = rec_by_id[rid] %}<p><strong>{{ t('an.how') }}:</strong> {{ r.body }}</p>{% endfor %}
+{% if f.urls|length > 1 %}
+<details><summary style="cursor:pointer;font-size:.85rem">{{ t('find.urls') }} ({{ f.urls|length }})</summary>
+<ul class="plain" style="margin:6px 0 0;padding-left:18px;font-size:.82rem">{% for u in f.urls[:10] %}<li><code>{{ u }}</code></li>{% endfor %}</ul></details>
+{% endif %}
+</div>
+<div class="side-actions">
+{% for rid in f.recommendation_ids[:1] %}{% set r = rec_by_id[rid] %}<div class="chips2"><span>{{ t('effort.' ~ r.effort.level) }}</span><span>{{ t('impact.' ~ r.impact.level) }}</span></div>{% endfor %}
+<a class="btn-line btn-sm" href="/audits/{{ a.id }}/chat?finding={{ f.id }}&amp;lang={{ lang }}">{{ ico('chat', 14) }}{{ t('an.ask') }}</a>
+</div>
+</article>
+{% endfor %}
+
+{% if cat and cat.checks %}
+<details class="card2 d2">
+<summary>{{ t('an.passed') }} · {{ t('an.checks_found', n=cat.checks_passed, m=cat.checks_total) }}</summary>
+<div class="tablewrap" style="margin-top:10px"><table class="dense"><caption class="sr">{{ t('tab.' ~ cat.id.value) }}</caption>
+<thead><tr><th scope="col">{{ t('checks.col.check') }}</th><th scope="col">{{ t('checks.col.severity') }}</th><th scope="col">{{ t('checks.col.weight') }}</th><th scope="col">{{ t('checks.col.ratio') }}</th></tr></thead>
+<tbody>
+{% for k in cat.checks %}<tr><td><code>{{ k.check_id }}</code><br><span class="muted" style="font-size:.8rem">{{ k.message|truncate(140) }}</span></td><td>{{ sev_badge(k.severity.value, t, severity_shape) }}</td><td>{{ k.weight|nl }}</td><td>{{ (k.pass_ratio * 100)|round|int }}%</td></tr>{% endfor %}
+</tbody></table></div>
+</details>
+{% endif %}
+</section>
+
+{% if read_stats %}
+<section class="card2 read-card" aria-labelledby="an-read">
+<h2 id="an-read">{{ t('an.read.title') }}</h2>
+<div class="stat-grid" style="flex:none">
+{% for kv in read_stats %}<div><b>{{ kv.value }}</b><span>{{ kv.label }}</span></div>{% endfor %}
+</div>
+{% if read_terms %}<div class="chips3">{% for kv in read_terms %}<span>{{ kv.label }} <strong>{{ kv.value }}</strong></span>{% endfor %}</div>{% endif %}
+<p class="muted" style="margin:0;font-size:.78rem">{{ t('an.read.note') }}</p>
+</section>
+{% endif %}
+
+{% if details %}
+<details class="card2 d2 more">
+<summary>{{ t('an.details') }}</summary>
+<div class="legacy" style="margin-top:14px">
+{% for part, sid in details %}
+{% set only = sid %}
+{% include part %}
+{% endfor %}
+</div>
+</details>
+{% endif %}
+{% endblock %}

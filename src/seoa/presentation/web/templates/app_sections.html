@@ -1,0 +1,19 @@
+{% extends 'app_base.html' %}
+{% from '_app_macros.html' import ico with context %}
+{% from '_macros.html' import sev_icon, sev_badge, gauge with context %}
+{% set a = report.audit %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>{{ heading }}</h1>
+<p>{{ t('shell.audit_pill', host=host_of(a.requested_url), date=fmt_date(a.finished_at or a.started_at, false)) }}</p>
+</div>
+<div class="head-actions"><a class="btn-soft" href="/audits/{{ a.id }}/chat?lang={{ lang }}">{{ ico('chat', 16) }}{{ t('an.ask_page') }}</a></div>
+</div>
+<div class="legacy">
+{% for part, sid in sections %}
+{% set only = sid %}
+{% include part %}
+{% endfor %}
+</div>
+{% endblock %}

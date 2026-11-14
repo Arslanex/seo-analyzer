@@ -1,0 +1,91 @@
+{# Local SEO, suggested sitemap, domain authority (belge 12 C4/C5/B2). Every page-derived value is autoescaped. #}
+{% macro xnm(sec) %}
+<div class="card nm"><div class="big">— {{ t('cats.notmeasured') }}</div><p class="small">{{ sec.not_measured_text }}</p></div>
+{% endmacro %}
+{% macro gsctable_rank(rows) %}
+<div class="tablewrap"><table class="dense"><thead><tr><th scope="col">{{ t('rank.col.query') }}</th><th scope="col">{{ t('gsc.position') }}</th><th scope="col">{{ t('gsc.impressions') }}</th><th scope="col">{{ t('gsc.clicks') }}</th><th scope="col">{{ t('gsc.ctr') }}</th></tr></thead><tbody>
+{% for r in rows %}<tr><td class="u"><code>{{ r.query }}</code></td><td>{{ r.position|num }}</td><td>{{ r.impressions }}</td><td>{{ r.clicks }}</td><td>{{ r.ctr_pct|num }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endmacro %}
+
+{% if only is none or only == 'sec-local' %}
+<section id="sec-local" aria-labelledby="local-h">
+<h2 id="local-h">{{ t('sec.local') }}</h2>
+{% set S = report.local %}
+{% if S.status == 'not_measured' %}{{ xnm(S) }}{% else %}
+<p class="muted small">{{ S.note }}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('sec.local') }}</caption><tbody>
+{% for r in S.facts %}<tr><th scope="row">{{ r.label }}</th><td class="u">{{ r.value }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if S.phones %}<h3>{{ t('local.phones') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('local.phones') }}</caption><thead><tr><th scope="col">{{ t('local.col.number') }}</th><th scope="col">{{ t('local.col.formats') }}</th><th scope="col">{{ t('local.col.sources') }}</th><th scope="col">{{ t('local.col.pages') }}</th></tr></thead><tbody>
+{% for p in S.phones %}<tr><th scope="row">{{ p.number }}</th><td class="u">{{ p.formats }}</td><td>{{ p.sources }}</td><td>{{ p.pages }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if S.addresses %}<h3>{{ t('local.addresses') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('local.addresses') }}</caption><thead><tr><th scope="col">{{ t('local.col.address') }}</th><th scope="col">{{ t('local.col.sources') }}</th><th scope="col">{{ t('local.col.pages') }}</th></tr></thead><tbody>
+{% for a in S.addresses %}<tr><th scope="row" class="u">{{ a.text }}</th><td>{{ a.source }}</td><td>{{ a.pages }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if S.issues %}<h3>{{ t('local.issues') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('local.issues') }}</caption><thead><tr><th scope="col">{{ t('local.col.issue') }}</th><th scope="col">{{ t('local.col.values') }}</th></tr></thead><tbody>
+{% for i in S.issues %}<tr><th scope="row">{{ i.label }}</th><td class="u">{{ i.values }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if S.notes %}<ul class="plain">{% for n in S.notes %}<li class="muted small">{{ n }}</li>{% endfor %}</ul>{% endif %}
+{% endif %}
+</section>
+{% endif %}
+
+{% if only is none or only == 'sec-sitemapgen' %}
+<section id="sec-sitemapgen" aria-labelledby="smg-h">
+<h2 id="smg-h">{{ t('sec.sitemapgen') }}</h2>
+{% set S = report.sitemap_gen %}
+{% if S.status == 'not_measured' %}{{ xnm(S) }}{% else %}
+<p class="muted small">{{ S.note }}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('sec.sitemapgen') }}</caption><tbody>
+{% for r in S.facts %}<tr><th scope="row">{{ r.label }}</th><td class="u">{{ r.value }}</td></tr>{% endfor %}
+</tbody></table></div>
+<details><summary>{{ t('smg.copy', shown=S.urls_shown) }}</summary><pre class="ev" dir="ltr" tabindex="0" style="overflow:auto"><code>{{ S.xml_preview }}</code></pre></details>
+{% if interactive %}<p><a href="{{ S.download_href }}" download="sitemap.xml">{{ t('smg.download') }}</a></p>{% endif %}
+{% if S.missing %}<h3>{{ t('smg.missing') }}</h3><ul class="plain">{% for u in S.missing %}<li class="u"><code>{{ u }}</code></li>{% endfor %}{% if S.missing_total > S.missing|length %}<li class="muted small">{{ t('smg.more', n=S.missing_total - S.missing|length) }}</li>{% endif %}</ul>{% endif %}
+{% if S.not_indexable %}<h3>{{ t('smg.not_indexable') }}</h3><ul class="plain">{% for k in S.not_indexable %}<li class="u"><code>{{ k.label }}</code> — {{ k.value }}</li>{% endfor %}{% if S.not_indexable_total > S.not_indexable|length %}<li class="muted small">{{ t('smg.more', n=S.not_indexable_total - S.not_indexable|length) }}</li>{% endif %}</ul>{% endif %}
+{% if S.excluded %}<h3>{{ t('smg.excluded') }}</h3><ul class="plain">{% for k in S.excluded %}<li class="u"><code>{{ k.label }}</code> — {{ k.value }}</li>{% endfor %}{% if S.excluded_total > S.excluded|length %}<li class="muted small">{{ t('smg.more', n=S.excluded_total - S.excluded|length) }}</li>{% endif %}</ul>{% endif %}
+{% endif %}
+</section>
+{% endif %}
+
+{% if only is none or only == 'sec-authority' %}
+<section id="sec-authority" aria-labelledby="auth-h">
+<h2 id="auth-h">{{ t('sec.authority') }}</h2>
+{% set S = report.authority %}
+{% if S.status == 'not_measured' %}{{ xnm(S) }}{% else %}
+<p class="muted small">{{ S.note }}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('sec.authority') }}</caption><tbody>
+{% for r in S.items %}<tr><th scope="row">{{ r.label }}</th><td class="u">{{ r.value }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>
+{% endif %}
+
+{% if only is none or only == 'sec-rankings' %}
+<section id="sec-rankings" aria-labelledby="rank-h">
+<h2 id="rank-h">{{ t('sec.rankings') }} <span class="badge">{{ t('vis.badge') }}</span></h2>
+{% set S = report.rankings %}
+{% if S.status == 'not_measured' %}{{ xnm(S) }}{% else %}
+<p class="muted small">{{ S.note }}</p>
+{% if S.keywords_note %}<p class="muted">{{ S.keywords_note }}</p>{% endif %}
+{% if S.rows %}
+<h3>{{ t('rank.kw.title') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('rank.kw.title') }}</caption><thead><tr><th scope="col">{{ t('rank.col.keyword') }}</th><th scope="col">{{ t('gsc.position') }}</th><th scope="col">{{ t('gsc.impressions') }}</th><th scope="col">{{ t('gsc.clicks') }}</th><th scope="col">{{ t('gsc.ctr') }}</th><th scope="col">{{ t('rank.col.page') }}</th><th scope="col">{{ t('rank.col.status') }}</th></tr></thead><tbody>
+{% for r in S.rows %}<tr><td class="u"><code>{{ r.keyword }}</code>{% if r.matched_query %}<br><span class="muted small">{{ t('rank.matched', query=r.matched_query) }}</span>{% endif %}</td>
+{% if r.status == 'ok' %}<td>{{ r.position|num }}</td><td>{{ r.impressions }}</td><td>{{ r.clicks }}</td><td>{{ r.ctr_pct|num }}</td><td class="u">{% if r.top_page %}<code>{{ r.top_page }}</code>{% else %}—{% endif %}</td><td>{{ r.status_text }}</td>
+{% else %}<td colspan="5" class="muted">—</td><td>{{ r.status_text }}</td>{% endif %}</tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if S.list_error %}<p class="muted small">{{ S.list_error }}</p>{% endif %}
+<h3>{{ t('rank.opp.title') }}</h3>
+{% if S.opportunities %}{{ gsctable_rank(S.opportunities) }}{% else %}<p class="muted">{{ t('rank.none.list') }}</p>{% endif %}
+<h3>{{ t('rank.low.title') }}</h3>
+{% if S.low_ctr %}{{ gsctable_rank(S.low_ctr) }}{% else %}<p class="muted">{{ t('rank.none.list') }}</p>{% endif %}
+<p class="muted small">{{ S.rules_note }}</p>
+{% endif %}
+</section>
+{% endif %}

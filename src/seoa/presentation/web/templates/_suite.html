@@ -1,0 +1,198 @@
+{# Phase-A sections (belge 12). Every value from a page is autoescaped. #}
+{% macro nm(sec) %}
+<div class="card nm"><div class="big">— {{ t('cats.notmeasured') }}</div><p class="small">{{ sec.not_measured_text }}</p></div>
+{% endmacro %}
+{% macro yn(v) %}{% if v is none %}—{% elif v %}{{ t('idx.yes') }}{% else %}{{ t('idx.no') }}{% endif %}{% endmacro %}
+{% macro kvtable(rows, title, h1, h2) %}
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ title }}</caption><thead><tr><th scope="col">{{ h1 }}</th><th scope="col">{{ h2 }}</th></tr></thead><tbody>
+{% for r in rows %}<tr><th scope="row">{{ r.label }}</th><td class="u">{{ r.value }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endmacro %}
+
+{# ------------------------------------------------------------------ technology #}
+{% if only is none or only == 'sec-techstack' %}
+<section id="sec-techstack" aria-labelledby="tech-h">
+<h2 id="tech-h">{{ t('sec.tech') }}</h2>
+{% set S = report.techstack %}
+{% if S.status == 'not_measured' %}{{ nm(S) }}{% else %}
+<p class="muted small">{{ S.note }}</p>
+{% for g in S.groups %}
+<h3>{{ g.label }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ g.label }}</caption><thead><tr><th scope="col">{{ t('tech.col.name') }}</th><th scope="col">{{ t('tech.col.version') }}</th><th scope="col">{{ t('tech.col.conf') }}</th><th scope="col">{{ t('tech.col.evidence') }}</th></tr></thead><tbody>
+{% for i in g.items %}<tr><th scope="row">{{ i.name }}</th><td>{{ i.version or '—' }}</td><td>{{ t('conf.' ~ i.confidence) }}</td><td class="u"><code>{{ i.evidence }}</code></td></tr>{% endfor %}
+</tbody></table></div>
+{% endfor %}
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ site setup #}
+{% if only is none or only == 'sec-setup' %}
+<section id="sec-setup" aria-labelledby="setup-h">
+<h2 id="setup-h">{{ t('sec.setup') }}</h2>
+{% set S = report.site_setup %}
+{% if S.status == 'not_measured' %}{{ nm(S) }}{% else %}
+<div class="grid cols3">
+<div class="card"><h3>{{ t('setup.soft404.title') }}</h3><p>{{ S.soft_404_text }}</p><p class="muted small">{{ S.custom_404_text }}</p></div>
+<div class="card"><h3>{{ t('setup.hsts.title') }}</h3><p>{{ S.hsts_text }}</p></div>
+<div class="card"><h3>{{ t('setup.http.title') }}</h3><p>{{ S.http_version_text }}</p></div>
+</div>
+{% if S.redirects %}
+<h3>{{ t('setup.redirects.title') }}</h3>
+<p class="muted small">{{ t('setup.redirects.note') }}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('setup.redirects.title') }}</caption><thead><tr><th scope="col">{{ t('setup.col.variant') }}</th><th scope="col">{{ t('setup.col.url') }}</th><th scope="col">{{ t('setup.col.status') }}</th><th scope="col">{{ t('setup.col.final') }}</th><th scope="col">{{ t('setup.col.hops') }}</th><th scope="col">{{ t('setup.col.permanent') }}</th></tr></thead><tbody>
+{% for r in S.redirects %}<tr><th scope="row">{{ r.label }}</th><td class="u"><code>{{ r.variant_url }}</code></td><td>{{ r.status if r.status is not none else '—' }}{% if r.note %} <span class="muted small">{{ r.note }}</span>{% endif %}</td><td class="u">{% if r.final_url %}<code>{{ r.final_url }}</code>{% else %}—{% endif %}</td><td>{{ r.hops }}</td><td>{{ yn(r.permanent) }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if S.skipped %}
+<h3>{{ t('setup.skipped.title') }}</h3>
+<ul class="plain">{% for k in S.skipped %}<li>{{ k.label }}: {{ k.value }}</li>{% endfor %}</ul>
+{% endif %}
+{% if S.headers %}
+<h3>{{ t('setup.headers.title') }}</h3>
+{{ kvtable(S.headers, t('setup.headers.title'), t('setup.col.variant'), t('setup.col.status')) }}
+{% endif %}
+{% if S.files %}
+<h3>{{ t('setup.files.title') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('setup.files.title') }}</caption><thead><tr><th scope="col">{{ t('setup.files.title') }}</th><th scope="col">{{ t('setup.col.url') }}</th><th scope="col">{{ t('setup.col.present') }}</th><th scope="col">{{ t('col.status') }}</th></tr></thead><tbody>
+{% for f in S.files %}<tr><th scope="row">{{ f.label }}</th><td class="u"><code>{{ f.url }}</code>{% if f.note %}<br><span class="muted small">{{ f.note }}</span>{% endif %}</td><td>{{ yn(f.present) }}</td><td>{{ f.status if f.status is not none else '—' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+<p class="muted small">{{ t('setup.requests', n=S.requests_made) }}</p>
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ previews #}
+{% if only is none or only == 'sec-previews' %}
+<section id="sec-previews" aria-labelledby="prev-h">
+<h2 id="prev-h">{{ t('sec.prev') }}</h2>
+{% set S = report.previews %}
+{% if S.status == 'not_measured' %}{{ nm(S) }}{% else %}
+{% if S.serp %}
+<h3>{{ t('prev.serp.title') }}</h3>
+<p class="muted small">{{ t('prev.serp.note') }}</p>
+<div class="grid cols3" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+{% for p in S.serp %}
+<div class="card"><p class="muted small">{{ p.device_label }}</p>
+<p class="small u">{{ p.display_url }}</p>
+<p><strong>{{ p.title_shown }}</strong>{% if p.title_truncated %} <span class="badge">{{ t('prev.truncated') }}</span>{% endif %}</p>
+{% if p.description_missing %}<p class="muted">{{ t('prev.desc.missing') }}</p>
+{% else %}<p>{{ p.description_shown }}{% if p.description_truncated %} <span class="badge">{{ t('prev.truncated') }}</span>{% endif %}</p>{% endif %}
+</div>
+{% endfor %}
+</div>
+{% endif %}
+<h3>{{ t('prev.social.title') }}</h3>
+{% if S.social %}{{ kvtable(S.social, t('prev.social.title'), t('setup.col.variant'), t('setup.col.status')) }}
+{% else %}<p class="muted">{{ t('prev.social.none') }}</p>{% endif %}
+{% if S.social_image %}
+<h3>{{ t('prev.img.title') }}</h3>
+{{ kvtable(S.social_image, t('prev.img.title'), t('setup.col.variant'), t('setup.col.status')) }}
+{% endif %}
+{% if S.notes %}<ul class="plain">{% for n in S.notes %}<li class="muted small">{{ n }}</li>{% endfor %}</ul>{% endif %}
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ screenshots #}
+{% if only is none or only == 'sec-screenshots' %}
+<section id="sec-screenshots" aria-labelledby="shots-h">
+<h2 id="shots-h">{{ t('sec.shots') }}</h2>
+{% set S = report.screenshots %}
+{% if S.status == 'not_measured' %}{{ nm(S) }}{% else %}
+<p class="muted small">{{ t('shots.note') }}</p>
+<div class="grid cols3" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+{% for sh in S.shots %}
+<figure class="card" style="margin:0"><img src="{{ sh.url }}" alt="{{ t('shots.alt', device=sh.device_label) }}" width="{{ sh.width }}" height="{{ sh.height }}" loading="lazy" style="max-width:100%;height:auto"><figcaption class="muted small">{{ sh.device_label }} · {{ sh.width }}×{{ sh.height }} · {{ sh.kb|num }} KB</figcaption></figure>
+{% endfor %}
+</div>
+{% if S.above_fold %}
+<h3>{{ t('shots.fold.title') }}</h3>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('shots.fold.title') }}</caption><thead><tr><th scope="col">{{ t('shots.col.device') }}</th><th scope="col">{{ t('shots.col.h1') }}</th><th scope="col">{{ t('shots.col.cta') }}</th><th scope="col">{{ t('shots.col.text') }}</th><th scope="col">{{ t('shots.col.overflow') }}</th><th scope="col">{{ t('shots.col.overlay') }}</th></tr></thead><tbody>
+{% for f in S.above_fold %}<tr><th scope="row">{{ f.device_label }}</th><td>{{ yn(f.h1_visible) }}</td><td>{{ yn(f.cta_visible) }}</td><td>{{ f.text_chars }}</td><td>{{ yn(f.overflow) }}</td><td>{{ f.overlay_pct|num }}%</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if S.errors %}<h3>{{ t('shots.errors') }}</h3><ul class="plain">{% for e in S.errors %}<li>{{ e.label }}: <code>{{ e.value }}</code></li>{% endfor %}</ul>{% endif %}
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ readability #}
+{% if only is none or only == 'sec-readability' %}
+<section id="sec-readability" aria-labelledby="read-h">
+<h2 id="read-h">{{ t('sec.read') }}</h2>
+{% set S = report.readability %}
+{% if S.status == 'not_measured' %}{{ nm(S) }}{% else %}
+<p class="muted small">{{ t('read.note.text') }}</p>
+{% if S.scores %}<h3>{{ t('read.scores.title') }}</h3>{{ kvtable(S.scores, t('read.scores.title'), t('setup.col.variant'), t('setup.col.status')) }}{% endif %}
+<h3>{{ t('read.kw.title') }}</h3>
+{% if S.keywords %}
+<p class="muted small">{{ t('read.kw.note') }}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('read.kw.title') }}</caption><thead><tr><th scope="col">{{ t('read.kw.col.keyword') }}</th><th scope="col">{{ t('read.kw.col.title') }}</th><th scope="col">{{ t('read.kw.col.h1') }}</th><th scope="col">{{ t('read.kw.col.desc') }}</th><th scope="col">{{ t('read.kw.col.url') }}</th><th scope="col">{{ t('read.kw.col.first100') }}</th><th scope="col">{{ t('read.kw.col.sub') }}</th><th scope="col">{{ t('read.kw.col.count') }}</th><th scope="col">{{ t('read.kw.col.density') }}</th></tr></thead><tbody>
+{% for k in S.keywords %}<tr><th scope="row">{{ k.keyword }}</th><td>{{ yn(k.in_title) }}</td><td>{{ yn(k.in_h1) }}</td><td>{{ yn(k.in_description) }}</td><td>{{ yn(k.in_url) }}</td><td>{{ yn(k.in_first_100_words) }}</td><td>{{ yn(k.in_subheadings) }}</td><td>{{ k.occurrences }}</td><td>{{ k.density_percent|num }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="muted">{{ S.keywords_not_measured_text }}</p>{% endif %}
+{% if S.suggested_targets %}<p><strong>{{ t('read.suggested') }}:</strong> {{ S.suggested_targets|join(', ') }}</p>{% endif %}
+{% if S.terms %}<h3>{{ t('read.terms.title') }}</h3><p class="muted small">{{ t('read.terms.note') }}</p>{{ kvtable(S.terms, t('read.terms.title'), t('read.col.term'), t('read.col.count')) }}{% endif %}
+{% if S.phrases %}<h3>{{ t('read.phrases.title') }}</h3>{{ kvtable(S.phrases, t('read.phrases.title'), t('read.col.term'), t('read.col.count')) }}{% endif %}
+{% if S.notes %}<ul class="plain">{% for n in S.notes %}<li class="muted small">{{ n }}</li>{% endfor %}</ul>{% endif %}
+{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ hreflang #}
+{% if only is none or only == 'sec-hreflang' %}
+<section id="sec-hreflang" aria-labelledby="hreflang-h">
+<h2 id="hreflang-h">{{ t('sec.hreflang') }}</h2>
+{% set S = report.hreflang %}
+{% if S.status == 'not_measured' %}{{ nm(S) }}{% else %}
+<p>{{ t('hreflang.langs') }}: <code>{{ S.languages|join(', ') }}</code> · {{ t('hreflang.xdefault') }}: {{ yn(S.has_x_default) }}</p>
+{% if S.unchecked %}<p class="muted small">{{ t('hreflang.unchecked', n=S.unchecked) }}</p>{% endif %}
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('sec.hreflang') }}</caption><thead><tr><th scope="col">{{ t('hreflang.col.page') }}</th><th scope="col">{{ t('hreflang.col.lang') }}</th><th scope="col">{{ t('hreflang.col.entries') }}</th><th scope="col">{{ t('hreflang.col.issues') }}</th></tr></thead><tbody>
+{% for r in S.rows %}<tr><td class="u"><code>{{ r.url }}</code></td><td>{{ r.html_lang or '—' }}</td><td>{% for e in r.entries %}<div class="small"><code>{{ e.label }}</code> → <span class="u">{{ e.value }}</span></div>{% endfor %}</td><td>{% if r.issues %}<ul class="plain">{% for x in r.issues %}<li>{{ x }}</li>{% endfor %}</ul>{% else %}—{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if S.rows_total > S.rows|length %}<p class="muted small">{{ t('deep.truncated', shown=S.rows|length, total=S.rows_total) }}</p>{% endif %}
+{% endif %}
+{% if S.notes %}<ul class="plain">{% for n in S.notes %}<li class="muted small">{{ n }}</li>{% endfor %}</ul>{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ schema suggestions #}
+{% if only is none or only == 'sec-schemasug' %}
+<section id="sec-schemasug" aria-labelledby="schemasug-h">
+<h2 id="schemasug-h">{{ t('sec.schemasug') }}</h2>
+{% set S = report.schema_suggestions %}
+{% if S.status == 'not_measured' %}{{ nm(S) }}{% else %}
+<div class="banner info" role="note">{{ t('schemasug.warn') }}</div>
+{% for i in S.items %}
+<div class="card"><h3>{{ i.type }} <span class="badge">{{ t('schemasug.complete') if i.complete else t('schemasug.incomplete') }}</span></h3>
+<p class="small u"><code>{{ i.url }}</code></p>
+<p>{{ i.reason }}</p>
+{% if i.missing_fields %}<p class="small"><strong>{{ t('schemasug.missing') }}:</strong> {{ i.missing_fields|join(', ') }}</p>{% endif %}
+{% if i.rich_result_note %}<p class="muted small">{{ i.rich_result_note }}</p>{% endif %}
+{% if i.warning %}<p class="muted small">{{ i.warning }}</p>{% endif %}
+<details><summary>{{ t('schemasug.copy') }}</summary><pre class="ev" dir="ltr" tabindex="0" style="overflow:auto"><code>{{ i.json_ld }}</code></pre></details>
+</div>
+{% endfor %}
+{% if S.items_total > S.items|length %}<p class="muted small">{{ t('deep.truncated', shown=S.items|length, total=S.items_total) }}</p>{% endif %}
+{% endif %}
+{% if S.notes %}<ul class="plain">{% for n in S.notes %}<li class="muted small">{{ n }}</li>{% endfor %}</ul>{% endif %}
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------------ agentic #}
+{% if only is none or only == 'sec-agentic' %}
+<section id="sec-agentic" aria-labelledby="agentic-h">
+<h2 id="agentic-h">{{ t('sec.agentic') }}</h2>
+{% set S = report.agentic %}
+{% if S.status == 'not_measured' %}{{ nm(S) }}{% else %}
+<p><strong>{{ t('agentic.fraction', fraction=S.fraction) }}</strong></p>
+<p class="muted small">{{ S.note }}</p>
+<div class="tablewrap"><table class="dense"><caption class="sr">{{ t('sec.agentic') }}</caption><thead><tr><th scope="col">{{ t('checks.col.check') }}</th><th scope="col">{{ t('col.status') }}</th><th scope="col">{{ t('setup.col.status') }}</th></tr></thead><tbody>
+{% for r in S.rows %}<tr><th scope="row">{{ r.label }}</th><td>{{ t('agentic.status.' ~ r.status) }}</td><td class="u">{{ r.detail or '—' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if S.notes %}<ul class="plain">{% for n in S.notes %}<li class="muted small">{{ n }}</li>{% endfor %}</ul>{% endif %}
+{% endif %}
+</section>
+{% endif %}
